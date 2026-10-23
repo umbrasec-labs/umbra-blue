@@ -13,197 +13,199 @@ Every skill in [claude-red](https://github.com/SnailSploit/claude-red) paired to
 
 A Tier 2 skill is promoted to Tier 1 when its UMBRASEC writeup and tuned rule land.
 
+The Mapper column opens each skill's page in the [Blue Team Mapper](https://umbrasec-labs.github.io/BlueTeamMapper/). It shows the skill's ATT&CK techniques and any UMBRASEC rules for them. Where those techniques are in the mapper matrix, it also shows the matrix rows, the response flow chains they lead to, and your own coverage rating.
+
 ## Web Application
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-sqli`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-sqli/SKILL.md) | [`detect-metabase-sqli`](Skills/web/detect-metabase-sqli/SKILL.md) | Unauthenticated SQLi detection from the Metabase CVE-2026-72898 case | 1 |
-| [`offensive-rce`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-rce/SKILL.md) | [`detect-litellm-command-injection`](Skills/web/detect-litellm-command-injection/SKILL.md) | LiteLLM proxy RCE (CVE-2026-42271) detection, host and web signals | 1 |
-| [`offensive-xss`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-xss/SKILL.md) | [`detect-xss`](Skills/web/detect-xss/SKILL.md) | CSP, output-encoding gaps, DOM-sink monitoring | 2 |
-| [`offensive-ssrf`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-ssrf/SKILL.md) | [`detect-ssrf`](Skills/web/detect-ssrf/SKILL.md) | Metadata-endpoint access, egress anomaly, allowlist bypass | 2 |
-| [`offensive-ssti`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-ssti/SKILL.md) | [`detect-ssti`](Skills/web/detect-ssti/SKILL.md) | Template-engine error and payload signatures | 2 |
-| [`offensive-xxe`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-xxe/SKILL.md) | [`detect-xxe`](Skills/web/detect-xxe/SKILL.md) | External-entity and OOB callback detection | 2 |
-| [`offensive-idor`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-idor/SKILL.md) | [`detect-idor`](Skills/web/detect-idor/SKILL.md) | Authorization-failure and object-enumeration signals | 2 |
-| [`offensive-file-upload`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-file-upload/SKILL.md) | [`detect-malicious-upload`](Skills/web/detect-malicious-upload/SKILL.md) | Upload content inspection, webshell and polyglot detection | 2 |
-| [`offensive-deserialization`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-deserialization/SKILL.md) | [`detect-deserialization`](Skills/web/detect-deserialization/SKILL.md) | Gadget-chain and untrusted-stream indicators | 2 |
-| [`offensive-race-condition`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-race-condition/SKILL.md) | [`detect-web-race-condition`](Skills/web/detect-web-race-condition/SKILL.md) | Single-packet and limit-bypass anomaly detection | 2 |
-| [`offensive-request-smuggling`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-request-smuggling/SKILL.md) | [`detect-request-smuggling`](Skills/web/detect-request-smuggling/SKILL.md) | CL.TE / TE.CL desync signatures and front-end hardening | 2 |
-| [`offensive-open-redirect`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-open-redirect/SKILL.md) | [`defend-open-redirect`](Skills/web/defend-open-redirect/SKILL.md) | Redirect allowlisting, token-leak prevention | 2 |
-| [`offensive-parameter-pollution`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-parameter-pollution/SKILL.md) | [`detect-hpp`](Skills/web/detect-hpp/SKILL.md) | Duplicate-parameter and WAF-confusion detection | 2 |
-| [`offensive-graphql`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-graphql/SKILL.md) | [`detect-graphql-abuse`](Skills/web/detect-graphql-abuse/SKILL.md) | Introspection lockdown, batching and alias-abuse limits | 2 |
-| [`offensive-waf-bypass`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-waf-bypass/SKILL.md) | [`harden-waf`](Skills/web/harden-waf/SKILL.md) | Encoding and chunked-transfer evasion coverage, rule tuning | 2 |
-| [`offensive-business-logic`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-business-logic/SKILL.md) | [`detect-business-logic-abuse`](Skills/web/detect-business-logic-abuse/SKILL.md) | Workflow-bypass and pricing-abuse monitoring | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-sqli`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-sqli/SKILL.md) | [`detect-metabase-sqli`](Skills/web/detect-metabase-sqli/SKILL.md) | Unauthenticated SQLi detection from the Metabase CVE-2026-72898 case | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-metabase-sqli) |
+| [`offensive-rce`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-rce/SKILL.md) | [`detect-litellm-command-injection`](Skills/web/detect-litellm-command-injection/SKILL.md) | LiteLLM proxy RCE (CVE-2026-42271) detection, host and web signals | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-litellm-command-injection) |
+| [`offensive-xss`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-xss/SKILL.md) | [`detect-xss`](Skills/web/detect-xss/SKILL.md) | CSP, output-encoding gaps, DOM-sink monitoring | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-xss) |
+| [`offensive-ssrf`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-ssrf/SKILL.md) | [`detect-ssrf`](Skills/web/detect-ssrf/SKILL.md) | Metadata-endpoint access, egress anomaly, allowlist bypass | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-ssrf) |
+| [`offensive-ssti`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-ssti/SKILL.md) | [`detect-ssti`](Skills/web/detect-ssti/SKILL.md) | Template-engine error and payload signatures | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-ssti) |
+| [`offensive-xxe`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-xxe/SKILL.md) | [`detect-xxe`](Skills/web/detect-xxe/SKILL.md) | External-entity and OOB callback detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-xxe) |
+| [`offensive-idor`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-idor/SKILL.md) | [`detect-idor`](Skills/web/detect-idor/SKILL.md) | Authorization-failure and object-enumeration signals | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-idor) |
+| [`offensive-file-upload`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-file-upload/SKILL.md) | [`detect-malicious-upload`](Skills/web/detect-malicious-upload/SKILL.md) | Upload content inspection, webshell and polyglot detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-malicious-upload) |
+| [`offensive-deserialization`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-deserialization/SKILL.md) | [`detect-deserialization`](Skills/web/detect-deserialization/SKILL.md) | Gadget-chain and untrusted-stream indicators | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-deserialization) |
+| [`offensive-race-condition`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-race-condition/SKILL.md) | [`detect-web-race-condition`](Skills/web/detect-web-race-condition/SKILL.md) | Single-packet and limit-bypass anomaly detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-web-race-condition) |
+| [`offensive-request-smuggling`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-request-smuggling/SKILL.md) | [`detect-request-smuggling`](Skills/web/detect-request-smuggling/SKILL.md) | CL.TE / TE.CL desync signatures and front-end hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-request-smuggling) |
+| [`offensive-open-redirect`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-open-redirect/SKILL.md) | [`defend-open-redirect`](Skills/web/defend-open-redirect/SKILL.md) | Redirect allowlisting, token-leak prevention | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-open-redirect) |
+| [`offensive-parameter-pollution`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-parameter-pollution/SKILL.md) | [`detect-hpp`](Skills/web/detect-hpp/SKILL.md) | Duplicate-parameter and WAF-confusion detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-hpp) |
+| [`offensive-graphql`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-graphql/SKILL.md) | [`detect-graphql-abuse`](Skills/web/detect-graphql-abuse/SKILL.md) | Introspection lockdown, batching and alias-abuse limits | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-graphql-abuse) |
+| [`offensive-waf-bypass`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-waf-bypass/SKILL.md) | [`harden-waf`](Skills/web/harden-waf/SKILL.md) | Encoding and chunked-transfer evasion coverage, rule tuning | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-waf) |
+| [`offensive-business-logic`](https://github.com/SnailSploit/claude-red/blob/main/Skills/web/offensive-business-logic/SKILL.md) | [`detect-business-logic-abuse`](Skills/web/detect-business-logic-abuse/SKILL.md) | Workflow-bypass and pricing-abuse monitoring | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-business-logic-abuse) |
 
 ## Auth & Identity
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-oauth`](https://github.com/SnailSploit/claude-red/blob/main/Skills/auth/offensive-oauth/SKILL.md) | [`detect-oauth-consent-phishing`](Skills/auth/detect-oauth-consent-phishing/SKILL.md) | Illicit consent grants and app-role abuse in Entra ID via KQL | 1 |
-| [`offensive-jwt`](https://github.com/SnailSploit/claude-red/blob/main/Skills/auth/offensive-jwt/SKILL.md) | [`defend-jwt`](Skills/auth/defend-jwt/SKILL.md) | Reject alg:none and key confusion, enforce validation and key rotation | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-oauth`](https://github.com/SnailSploit/claude-red/blob/main/Skills/auth/offensive-oauth/SKILL.md) | [`detect-oauth-consent-phishing`](Skills/auth/detect-oauth-consent-phishing/SKILL.md) | Illicit consent grants and app-role abuse in Entra ID via KQL | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-oauth-consent-phishing) |
+| [`offensive-jwt`](https://github.com/SnailSploit/claude-red/blob/main/Skills/auth/offensive-jwt/SKILL.md) | [`defend-jwt`](Skills/auth/defend-jwt/SKILL.md) | Reject alg:none and key confusion, enforce validation and key rotation | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-jwt) |
 
 ## Active Directory
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-active-directory`](https://github.com/SnailSploit/claude-red/blob/main/Skills/active-directory/offensive-active-directory/SKILL.md) | [`detect-kerberoasting`](Skills/active-directory/detect-kerberoasting/SKILL.md) | RC4 service-ticket downgrade, SPN fan-out, honeypot SPN via Event 4769 | 1 |
-| [`offensive-active-directory`](https://github.com/SnailSploit/claude-red/blob/main/Skills/active-directory/offensive-active-directory/SKILL.md) | [`detect-ad-credential-abuse`](Skills/active-directory/detect-ad-credential-abuse/SKILL.md) | ASREProast, DCSync, ACL and delegation abuse, MDI alerts | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-active-directory`](https://github.com/SnailSploit/claude-red/blob/main/Skills/active-directory/offensive-active-directory/SKILL.md) | [`detect-kerberoasting`](Skills/active-directory/detect-kerberoasting/SKILL.md) | RC4 service-ticket downgrade, SPN fan-out, honeypot SPN via Event 4769 | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-kerberoasting) |
+| [`offensive-active-directory`](https://github.com/SnailSploit/claude-red/blob/main/Skills/active-directory/offensive-active-directory/SKILL.md) | [`detect-ad-credential-abuse`](Skills/active-directory/detect-ad-credential-abuse/SKILL.md) | ASREProast, DCSync, ACL and delegation abuse, MDI alerts | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-ad-credential-abuse) |
 
 ## Wireless
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-wifi`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wifi/SKILL.md) | [`detect-wifi-attacks`](Skills/wireless/detect-wifi-attacks/SKILL.md) | 802.11 attack detection overview | 2 |
-| [`offensive-wifi-recon`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wifi-recon/SKILL.md) | [`detect-wifi-recon`](Skills/wireless/detect-wifi-recon/SKILL.md) | Rogue-scan and probe-flood detection | 2 |
-| [`offensive-deauth-disassoc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-deauth-disassoc/SKILL.md) | [`detect-deauth`](Skills/wireless/detect-deauth/SKILL.md) | Deauth/disassoc flood detection, 802.11w | 2 |
-| [`offensive-evil-twin`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-evil-twin/SKILL.md) | [`detect-rogue-ap`](Skills/wireless/detect-rogue-ap/SKILL.md) | Rogue and evil-twin AP detection | 2 |
-| [`offensive-wpa2-psk`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa2-psk/SKILL.md) | [`harden-wpa2`](Skills/wireless/harden-wpa2/SKILL.md) | PSK handshake-capture resistance, strong passphrase policy | 2 |
-| [`offensive-wpa3-sae`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa3-sae/SKILL.md) | [`harden-wpa3`](Skills/wireless/harden-wpa3/SKILL.md) | SAE transition-mode and downgrade hardening | 2 |
-| [`offensive-wpa-enterprise`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa-enterprise/SKILL.md) | [`harden-wpa-enterprise`](Skills/wireless/harden-wpa-enterprise/SKILL.md) | 802.1X/EAP server-cert validation, anti-rogue-RADIUS | 2 |
-| [`offensive-wps`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wps/SKILL.md) | [`harden-wps`](Skills/wireless/harden-wps/SKILL.md) | Disable WPS, Pixie-Dust exposure checks | 2 |
-| [`offensive-krack-fragattacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-krack-fragattacks/SKILL.md) | [`patch-krack-fragattacks`](Skills/wireless/patch-krack-fragattacks/SKILL.md) | KRACK and FragAttacks patch and exposure verification | 2 |
-| [`offensive-bluetooth-ble`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-bluetooth-ble/SKILL.md) | [`harden-ble`](Skills/wireless/harden-ble/SKILL.md) | GATT access control, pairing hardening | 2 |
-| [`offensive-bluetooth-classic`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-bluetooth-classic/SKILL.md) | [`harden-bluetooth-classic`](Skills/wireless/harden-bluetooth-classic/SKILL.md) | Discovery and SDP exposure reduction | 2 |
-| [`offensive-zigbee-thread-matter`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-zigbee-thread-matter/SKILL.md) | [`harden-zigbee-thread-matter`](Skills/wireless/harden-zigbee-thread-matter/SKILL.md) | Mesh-protocol key management and monitoring | 2 |
-| [`offensive-z-wave`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-z-wave/SKILL.md) | [`harden-z-wave`](Skills/wireless/harden-z-wave/SKILL.md) | S0/S2 key and sniffing exposure hardening | 2 |
-| [`offensive-lorawan-sub-ghz`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-lorawan-sub-ghz/SKILL.md) | [`harden-lorawan-sub-ghz`](Skills/wireless/harden-lorawan-sub-ghz/SKILL.md) | Join-procedure and session-key hardening | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-wifi`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wifi/SKILL.md) | [`detect-wifi-attacks`](Skills/wireless/detect-wifi-attacks/SKILL.md) | 802.11 attack detection overview | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-wifi-attacks) |
+| [`offensive-wifi-recon`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wifi-recon/SKILL.md) | [`detect-wifi-recon`](Skills/wireless/detect-wifi-recon/SKILL.md) | Rogue-scan and probe-flood detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-wifi-recon) |
+| [`offensive-deauth-disassoc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-deauth-disassoc/SKILL.md) | [`detect-deauth`](Skills/wireless/detect-deauth/SKILL.md) | Deauth/disassoc flood detection, 802.11w | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-deauth) |
+| [`offensive-evil-twin`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-evil-twin/SKILL.md) | [`detect-rogue-ap`](Skills/wireless/detect-rogue-ap/SKILL.md) | Rogue and evil-twin AP detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-rogue-ap) |
+| [`offensive-wpa2-psk`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa2-psk/SKILL.md) | [`harden-wpa2`](Skills/wireless/harden-wpa2/SKILL.md) | PSK handshake-capture resistance, strong passphrase policy | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-wpa2) |
+| [`offensive-wpa3-sae`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa3-sae/SKILL.md) | [`harden-wpa3`](Skills/wireless/harden-wpa3/SKILL.md) | SAE transition-mode and downgrade hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-wpa3) |
+| [`offensive-wpa-enterprise`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wpa-enterprise/SKILL.md) | [`harden-wpa-enterprise`](Skills/wireless/harden-wpa-enterprise/SKILL.md) | 802.1X/EAP server-cert validation, anti-rogue-RADIUS | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-wpa-enterprise) |
+| [`offensive-wps`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-wps/SKILL.md) | [`harden-wps`](Skills/wireless/harden-wps/SKILL.md) | Disable WPS, Pixie-Dust exposure checks | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-wps) |
+| [`offensive-krack-fragattacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-krack-fragattacks/SKILL.md) | [`patch-krack-fragattacks`](Skills/wireless/patch-krack-fragattacks/SKILL.md) | KRACK and FragAttacks patch and exposure verification | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/patch-krack-fragattacks) |
+| [`offensive-bluetooth-ble`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-bluetooth-ble/SKILL.md) | [`harden-ble`](Skills/wireless/harden-ble/SKILL.md) | GATT access control, pairing hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-ble) |
+| [`offensive-bluetooth-classic`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-bluetooth-classic/SKILL.md) | [`harden-bluetooth-classic`](Skills/wireless/harden-bluetooth-classic/SKILL.md) | Discovery and SDP exposure reduction | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-bluetooth-classic) |
+| [`offensive-zigbee-thread-matter`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-zigbee-thread-matter/SKILL.md) | [`harden-zigbee-thread-matter`](Skills/wireless/harden-zigbee-thread-matter/SKILL.md) | Mesh-protocol key management and monitoring | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-zigbee-thread-matter) |
+| [`offensive-z-wave`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-z-wave/SKILL.md) | [`harden-z-wave`](Skills/wireless/harden-z-wave/SKILL.md) | S0/S2 key and sniffing exposure hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-z-wave) |
+| [`offensive-lorawan-sub-ghz`](https://github.com/SnailSploit/claude-red/blob/main/Skills/wireless/offensive-lorawan-sub-ghz/SKILL.md) | [`harden-lorawan-sub-ghz`](Skills/wireless/harden-lorawan-sub-ghz/SKILL.md) | Join-procedure and session-key hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-lorawan-sub-ghz) |
 
 ## Cloud
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-cloud`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cloud/offensive-cloud/SKILL.md) | [`detect-cloud-attack-paths`](Skills/cloud/detect-cloud-attack-paths/SKILL.md) | IAM anomaly and control-plane log detection across AWS, Azure, GCP | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-cloud`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cloud/offensive-cloud/SKILL.md) | [`detect-cloud-attack-paths`](Skills/cloud/detect-cloud-attack-paths/SKILL.md) | IAM anomaly and control-plane log detection across AWS, Azure, GCP | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-cloud-attack-paths) |
 
 ## Mobile
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-mobile`](https://github.com/SnailSploit/claude-red/blob/main/Skills/mobile/offensive-mobile/SKILL.md) | [`harden-mobile-apps`](Skills/mobile/harden-mobile-apps/SKILL.md) | Static and runtime hardening for Android and iOS apps | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-mobile`](https://github.com/SnailSploit/claude-red/blob/main/Skills/mobile/offensive-mobile/SKILL.md) | [`harden-mobile-apps`](Skills/mobile/harden-mobile-apps/SKILL.md) | Static and runtime hardening for Android and iOS apps | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-mobile-apps) |
 
 ## IoT & Embedded
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-iot`](https://github.com/SnailSploit/claude-red/blob/main/Skills/iot/offensive-iot/SKILL.md) | [`harden-iot`](Skills/iot/harden-iot/SKILL.md) | Firmware, hardware-interface, and RTOS/ICS hardening | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-iot`](https://github.com/SnailSploit/claude-red/blob/main/Skills/iot/offensive-iot/SKILL.md) | [`harden-iot`](Skills/iot/harden-iot/SKILL.md) | Firmware, hardware-interface, and RTOS/ICS hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-iot) |
 
 ## Infrastructure & Endpoint
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-initial-access`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-initial-access/SKILL.md) | [`detect-initial-access`](Skills/infrastructure/detect-initial-access/SKILL.md) | Public-facing exploit and payload-delivery detection, from the Metabase and N-central cases | 2 |
-| [`offensive-edr-evasion`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-edr-evasion/SKILL.md) | [`detect-edr-evasion`](Skills/infrastructure/detect-edr-evasion/SKILL.md) | AMSI and ETW tamper detection, unhooking indicators | 2 |
-| [`offensive-advanced-redteam`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-advanced-redteam/SKILL.md) | [`detect-redteam-ttps`](Skills/infrastructure/detect-redteam-ttps/SKILL.md) | Purple-team detection coverage across the engagement lifecycle | 2 |
-| [`offensive-shellcode`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-shellcode/SKILL.md) | [`detect-shellcode-injection`](Skills/infrastructure/detect-shellcode-injection/SKILL.md) | Injection and in-memory execution detection | 2 |
-| [`offensive-keylogger-arch`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-keylogger-arch/SKILL.md) | [`detect-keyloggers`](Skills/infrastructure/detect-keyloggers/SKILL.md) | Input-capture and hook-install detection | 2 |
-| [`offensive-windows-boundaries`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-windows-boundaries/SKILL.md) | [`harden-windows-boundaries`](Skills/infrastructure/harden-windows-boundaries/SKILL.md) | Trust-boundary and token hardening | 2 |
-| [`offensive-windows-mitigations`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-windows-mitigations/SKILL.md) | [`verify-windows-mitigations`](Skills/infrastructure/verify-windows-mitigations/SKILL.md) | Confirm exploit mitigations are enforced | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-initial-access`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-initial-access/SKILL.md) | [`detect-initial-access`](Skills/infrastructure/detect-initial-access/SKILL.md) | Public-facing exploit and payload-delivery detection, from the Metabase and N-central cases | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-initial-access) |
+| [`offensive-edr-evasion`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-edr-evasion/SKILL.md) | [`detect-edr-evasion`](Skills/infrastructure/detect-edr-evasion/SKILL.md) | AMSI and ETW tamper detection, unhooking indicators | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-edr-evasion) |
+| [`offensive-advanced-redteam`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-advanced-redteam/SKILL.md) | [`detect-redteam-ttps`](Skills/infrastructure/detect-redteam-ttps/SKILL.md) | Purple-team detection coverage across the engagement lifecycle | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-redteam-ttps) |
+| [`offensive-shellcode`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-shellcode/SKILL.md) | [`detect-shellcode-injection`](Skills/infrastructure/detect-shellcode-injection/SKILL.md) | Injection and in-memory execution detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-shellcode-injection) |
+| [`offensive-keylogger-arch`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-keylogger-arch/SKILL.md) | [`detect-keyloggers`](Skills/infrastructure/detect-keyloggers/SKILL.md) | Input-capture and hook-install detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-keyloggers) |
+| [`offensive-windows-boundaries`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-windows-boundaries/SKILL.md) | [`harden-windows-boundaries`](Skills/infrastructure/harden-windows-boundaries/SKILL.md) | Trust-boundary and token hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-windows-boundaries) |
+| [`offensive-windows-mitigations`](https://github.com/SnailSploit/claude-red/blob/main/Skills/infrastructure/offensive-windows-mitigations/SKILL.md) | [`verify-windows-mitigations`](Skills/infrastructure/verify-windows-mitigations/SKILL.md) | Confirm exploit mitigations are enforced | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/verify-windows-mitigations) |
 
 ## Exploit Mitigation
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-exploit-development`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-exploit-development/SKILL.md) | [`defend-exploit-mitigations`](Skills/exploit-dev/defend-exploit-mitigations/SKILL.md) | ASLR, DEP, CFG, CET coverage and gaps | 2 |
-| [`offensive-basic-exploitation`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-basic-exploitation/SKILL.md) | [`defend-memory-corruption`](Skills/exploit-dev/defend-memory-corruption/SKILL.md) | Compiler and allocator hardening for memory safety | 2 |
-| [`offensive-crash-analysis`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-crash-analysis/SKILL.md) | [`triage-crashes-defensively`](Skills/exploit-dev/triage-crashes-defensively/SKILL.md) | Exploitability triage of crashes for defenders | 2 |
-| [`offensive-mitigations`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-mitigations/SKILL.md) | [`verify-exploit-mitigations`](Skills/exploit-dev/verify-exploit-mitigations/SKILL.md) | Audit that mitigations are present and effective | 2 |
-| [`offensive-toctou`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-toctou/SKILL.md) | [`detect-toctou-races`](Skills/exploit-dev/detect-toctou-races/SKILL.md) | TOCTOU and race-window hardening | 2 |
-| [`offensive-exploit-dev-course`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-exploit-dev-course/SKILL.md) | [`defend-memory-corruption`](Skills/exploit-dev/defend-memory-corruption/SKILL.md) | Covered by the memory-corruption defense skill | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-exploit-development`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-exploit-development/SKILL.md) | [`defend-exploit-mitigations`](Skills/exploit-dev/defend-exploit-mitigations/SKILL.md) | ASLR, DEP, CFG, CET coverage and gaps | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-exploit-mitigations) |
+| [`offensive-basic-exploitation`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-basic-exploitation/SKILL.md) | [`defend-memory-corruption`](Skills/exploit-dev/defend-memory-corruption/SKILL.md) | Compiler and allocator hardening for memory safety | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-memory-corruption) |
+| [`offensive-crash-analysis`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-crash-analysis/SKILL.md) | [`triage-crashes-defensively`](Skills/exploit-dev/triage-crashes-defensively/SKILL.md) | Exploitability triage of crashes for defenders | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/triage-crashes-defensively) |
+| [`offensive-mitigations`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-mitigations/SKILL.md) | [`verify-exploit-mitigations`](Skills/exploit-dev/verify-exploit-mitigations/SKILL.md) | Audit that mitigations are present and effective | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/verify-exploit-mitigations) |
+| [`offensive-toctou`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-toctou/SKILL.md) | [`detect-toctou-races`](Skills/exploit-dev/detect-toctou-races/SKILL.md) | TOCTOU and race-window hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-toctou-races) |
+| [`offensive-exploit-dev-course`](https://github.com/SnailSploit/claude-red/blob/main/Skills/exploit-dev/offensive-exploit-dev-course/SKILL.md) | [`defend-memory-corruption`](Skills/exploit-dev/defend-memory-corruption/SKILL.md) | Covered by the memory-corruption defense skill | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-memory-corruption) |
 
 ## Fuzzing & Vulnerability Triage
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-fuzzing`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-fuzzing/SKILL.md) | [`integrate-fuzzing-sdlc`](Skills/fuzzing/integrate-fuzzing-sdlc/SKILL.md) | Fuzz your own code in CI, triage findings | 2 |
-| [`offensive-fuzzing-course`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-fuzzing-course/SKILL.md) | [`integrate-fuzzing-sdlc`](Skills/fuzzing/integrate-fuzzing-sdlc/SKILL.md) | Covered by the SDLC fuzzing skill | 2 |
-| [`offensive-bug-identification`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-bug-identification/SKILL.md) | [`triage-vuln-classes`](Skills/fuzzing/triage-vuln-classes/SKILL.md) | Classify and prioritize discovered bug classes | 2 |
-| [`offensive-vuln-classes`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-vuln-classes/SKILL.md) | [`triage-vuln-classes`](Skills/fuzzing/triage-vuln-classes/SKILL.md) | Defender-side taxonomy and remediation mapping | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-fuzzing`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-fuzzing/SKILL.md) | [`integrate-fuzzing-sdlc`](Skills/fuzzing/integrate-fuzzing-sdlc/SKILL.md) | Fuzz your own code in CI, triage findings | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/integrate-fuzzing-sdlc) |
+| [`offensive-fuzzing-course`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-fuzzing-course/SKILL.md) | [`integrate-fuzzing-sdlc`](Skills/fuzzing/integrate-fuzzing-sdlc/SKILL.md) | Covered by the SDLC fuzzing skill | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/integrate-fuzzing-sdlc) |
+| [`offensive-bug-identification`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-bug-identification/SKILL.md) | [`triage-vuln-classes`](Skills/fuzzing/triage-vuln-classes/SKILL.md) | Classify and prioritize discovered bug classes | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/triage-vuln-classes) |
+| [`offensive-vuln-classes`](https://github.com/SnailSploit/claude-red/blob/main/Skills/fuzzing/offensive-vuln-classes/SKILL.md) | [`triage-vuln-classes`](Skills/fuzzing/triage-vuln-classes/SKILL.md) | Defender-side taxonomy and remediation mapping | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/triage-vuln-classes) |
 
 ## Exposure Management
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-osint-methodology`](https://github.com/SnailSploit/claude-red/blob/main/Skills/recon/offensive-osint-methodology/SKILL.md) | [`monitor-external-attack-surface`](Skills/recon/monitor-external-attack-surface/SKILL.md) | KEV exposure checks and external-surface monitoring | 1 |
-| [`offensive-osint`](https://github.com/SnailSploit/claude-red/blob/main/Skills/recon/offensive-osint/SKILL.md) | [`reduce-osint-exposure`](Skills/recon/reduce-osint-exposure/SKILL.md) | Shrink leaked data, exposed services, and employee footprint | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-osint-methodology`](https://github.com/SnailSploit/claude-red/blob/main/Skills/recon/offensive-osint-methodology/SKILL.md) | [`monitor-external-attack-surface`](Skills/recon/monitor-external-attack-surface/SKILL.md) | KEV exposure checks and external-surface monitoring | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/monitor-external-attack-surface) |
+| [`offensive-osint`](https://github.com/SnailSploit/claude-red/blob/main/Skills/recon/offensive-osint/SKILL.md) | [`reduce-osint-exposure`](Skills/recon/reduce-osint-exposure/SKILL.md) | Shrink leaked data, exposed services, and employee footprint | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/reduce-osint-exposure) |
 
 ## API Security
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-api-abuse`](https://github.com/SnailSploit/claude-red/blob/main/Skills/api/offensive-api-abuse/SKILL.md) | [`detect-api-business-logic-abuse`](Skills/api/detect-api-business-logic-abuse/SKILL.md) | BOLA/IDOR monitoring, rate and sequence anomaly | 2 |
-| [`offensive-api-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/api/offensive-api-security/SKILL.md) | [`harden-api-security`](Skills/api/harden-api-security/SKILL.md) | AuthZ, schema validation, gateway controls across REST/gRPC/WebSocket | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-api-abuse`](https://github.com/SnailSploit/claude-red/blob/main/Skills/api/offensive-api-abuse/SKILL.md) | [`detect-api-business-logic-abuse`](Skills/api/detect-api-business-logic-abuse/SKILL.md) | BOLA/IDOR monitoring, rate and sequence anomaly | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-api-business-logic-abuse) |
+| [`offensive-api-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/api/offensive-api-security/SKILL.md) | [`harden-api-security`](Skills/api/harden-api-security/SKILL.md) | AuthZ, schema validation, gateway controls across REST/gRPC/WebSocket | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-api-security) |
 
 ## Container & Kubernetes
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-container-escape`](https://github.com/SnailSploit/claude-red/blob/main/Skills/container/offensive-container-escape/SKILL.md) | [`detect-container-escape`](Skills/container/detect-container-escape/SKILL.md) | Runtime escape detection, seccomp and capability monitoring | 2 |
-| [`offensive-k8s-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/container/offensive-k8s-attacks/SKILL.md) | [`harden-k8s`](Skills/container/harden-k8s/SKILL.md) | RBAC least privilege, admission control, audit-log detection | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-container-escape`](https://github.com/SnailSploit/claude-red/blob/main/Skills/container/offensive-container-escape/SKILL.md) | [`detect-container-escape`](Skills/container/detect-container-escape/SKILL.md) | Runtime escape detection, seccomp and capability monitoring | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-container-escape) |
+| [`offensive-k8s-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/container/offensive-k8s-attacks/SKILL.md) | [`harden-k8s`](Skills/container/harden-k8s/SKILL.md) | RBAC least privilege, admission control, audit-log detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-k8s) |
 
 ## CI/CD & Pipeline
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-cicd-pipeline`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cicd/offensive-cicd-pipeline/SKILL.md) | [`harden-cicd-pipeline`](Skills/cicd/harden-cicd-pipeline/SKILL.md) | OIDC federation, runner isolation, workflow-injection prevention | 2 |
-| [`offensive-cicd-secrets`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cicd/offensive-cicd-secrets/SKILL.md) | [`detect-cicd-secret-exposure`](Skills/cicd/detect-cicd-secret-exposure/SKILL.md) | Secret scanning and rotation, pipeline leak detection | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-cicd-pipeline`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cicd/offensive-cicd-pipeline/SKILL.md) | [`harden-cicd-pipeline`](Skills/cicd/harden-cicd-pipeline/SKILL.md) | OIDC federation, runner isolation, workflow-injection prevention | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-cicd-pipeline) |
+| [`offensive-cicd-secrets`](https://github.com/SnailSploit/claude-red/blob/main/Skills/cicd/offensive-cicd-secrets/SKILL.md) | [`detect-cicd-secret-exposure`](Skills/cicd/detect-cicd-secret-exposure/SKILL.md) | Secret scanning and rotation, pipeline leak detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-cicd-secret-exposure) |
 
 ## Cryptography
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-crypto-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/crypto/offensive-crypto-attacks/SKILL.md) | [`harden-crypto-implementations`](Skills/crypto/harden-crypto-implementations/SKILL.md) | Fix padding, nonce reuse, and weak-primitive misuse | 2 |
-| [`offensive-tls-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/crypto/offensive-tls-attacks/SKILL.md) | [`harden-tls`](Skills/crypto/harden-tls/SKILL.md) | Cipher and protocol hardening, config scanning | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-crypto-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/crypto/offensive-crypto-attacks/SKILL.md) | [`harden-crypto-implementations`](Skills/crypto/harden-crypto-implementations/SKILL.md) | Fix padding, nonce reuse, and weak-primitive misuse | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-crypto-implementations) |
+| [`offensive-tls-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/crypto/offensive-tls-attacks/SKILL.md) | [`harden-tls`](Skills/crypto/harden-tls/SKILL.md) | Cipher and protocol hardening, config scanning | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/harden-tls) |
 
 ## Privilege Escalation
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-linux-privesc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/privesc/offensive-linux-privesc/SKILL.md) | [`detect-linux-privesc`](Skills/privesc/detect-linux-privesc/SKILL.md) | SUID, capability, and sudo-abuse detection and hardening | 2 |
-| [`offensive-windows-privesc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/privesc/offensive-windows-privesc/SKILL.md) | [`detect-windows-privesc`](Skills/privesc/detect-windows-privesc/SKILL.md) | Token, service, and UAC-bypass detection and hardening | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-linux-privesc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/privesc/offensive-linux-privesc/SKILL.md) | [`detect-linux-privesc`](Skills/privesc/detect-linux-privesc/SKILL.md) | SUID, capability, and sudo-abuse detection and hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-linux-privesc) |
+| [`offensive-windows-privesc`](https://github.com/SnailSploit/claude-red/blob/main/Skills/privesc/offensive-windows-privesc/SKILL.md) | [`detect-windows-privesc`](Skills/privesc/detect-windows-privesc/SKILL.md) | Token, service, and UAC-bypass detection and hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-windows-privesc) |
 
 ## Post-Exploitation
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-data-exfiltration`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-data-exfiltration/SKILL.md) | [`detect-data-exfiltration`](Skills/post-exploitation/detect-data-exfiltration/SKILL.md) | DNS and HTTPS exfil detection, egress volume anomaly | 1 |
-| [`offensive-persistence`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-persistence/SKILL.md) | [`detect-ncentral-post-exploitation`](Skills/post-exploitation/detect-ncentral-post-exploitation/SKILL.md) | Service persistence, masquerading, and tunnel detection from the N-central case | 1 |
-| [`offensive-lateral-movement`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-lateral-movement/SKILL.md) | [`detect-lateral-movement`](Skills/post-exploitation/detect-lateral-movement/SKILL.md) | Remote-exec, Pass-the-Hash and tunneling signals | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-data-exfiltration`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-data-exfiltration/SKILL.md) | [`detect-data-exfiltration`](Skills/post-exploitation/detect-data-exfiltration/SKILL.md) | DNS and HTTPS exfil detection, egress volume anomaly | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-data-exfiltration) |
+| [`offensive-persistence`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-persistence/SKILL.md) | [`detect-ncentral-post-exploitation`](Skills/post-exploitation/detect-ncentral-post-exploitation/SKILL.md) | Service persistence, masquerading, and tunnel detection from the N-central case | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-ncentral-post-exploitation) |
+| [`offensive-lateral-movement`](https://github.com/SnailSploit/claude-red/blob/main/Skills/post-exploitation/offensive-lateral-movement/SKILL.md) | [`detect-lateral-movement`](Skills/post-exploitation/detect-lateral-movement/SKILL.md) | Remote-exec, Pass-the-Hash and tunneling signals | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-lateral-movement) |
 
 ## Forensics & C2
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-c2-frameworks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/forensics/offensive-c2-frameworks/SKILL.md) | [`detect-c2-beaconing`](Skills/forensics/detect-c2-beaconing/SKILL.md) | Beacon jitter, JA3, and tunnel-service detection | 2 |
-| [`offensive-anti-forensics`](https://github.com/SnailSploit/claude-red/blob/main/Skills/forensics/offensive-anti-forensics/SKILL.md) | [`detect-anti-forensics`](Skills/forensics/detect-anti-forensics/SKILL.md) | Log-clear (1102), timestomp, and artifact-wipe detection | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-c2-frameworks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/forensics/offensive-c2-frameworks/SKILL.md) | [`detect-c2-beaconing`](Skills/forensics/detect-c2-beaconing/SKILL.md) | Beacon jitter, JA3, and tunnel-service detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-c2-beaconing) |
+| [`offensive-anti-forensics`](https://github.com/SnailSploit/claude-red/blob/main/Skills/forensics/offensive-anti-forensics/SKILL.md) | [`detect-anti-forensics`](Skills/forensics/detect-anti-forensics/SKILL.md) | Log-clear (1102), timestomp, and artifact-wipe detection | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-anti-forensics) |
 
 ## Supply Chain
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-supply-chain`](https://github.com/SnailSploit/claude-red/blob/main/Skills/supply-chain/offensive-supply-chain/SKILL.md) | [`detect-supply-chain-compromise`](Skills/supply-chain/detect-supply-chain-compromise/SKILL.md) | Compromised-package and tampered-artifact detection, MSP RMM risk | 1 |
-| [`offensive-dependency-confusion`](https://github.com/SnailSploit/claude-red/blob/main/Skills/supply-chain/offensive-dependency-confusion/SKILL.md) | [`detect-dependency-confusion`](Skills/supply-chain/detect-dependency-confusion/SKILL.md) | Namespace-takeover and resolver-order monitoring | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-supply-chain`](https://github.com/SnailSploit/claude-red/blob/main/Skills/supply-chain/offensive-supply-chain/SKILL.md) | [`detect-supply-chain-compromise`](Skills/supply-chain/detect-supply-chain-compromise/SKILL.md) | Compromised-package and tampered-artifact detection, MSP RMM risk | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-supply-chain-compromise) |
+| [`offensive-dependency-confusion`](https://github.com/SnailSploit/claude-red/blob/main/Skills/supply-chain/offensive-dependency-confusion/SKILL.md) | [`detect-dependency-confusion`](Skills/supply-chain/detect-dependency-confusion/SKILL.md) | Namespace-takeover and resolver-order monitoring | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-dependency-confusion) |
 
 ## Social Engineering
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-phishing`](https://github.com/SnailSploit/claude-red/blob/main/Skills/social-engineering/offensive-phishing/SKILL.md) | [`detect-phishing`](Skills/social-engineering/detect-phishing/SKILL.md) | Consent-phishing detection from the OAuth writeup; email-phishing controls next | 2 |
-| [`offensive-social-engineering`](https://github.com/SnailSploit/claude-red/blob/main/Skills/social-engineering/offensive-social-engineering/SKILL.md) | [`defend-social-engineering`](Skills/social-engineering/defend-social-engineering/SKILL.md) | Awareness, vishing and physical controls, process hardening | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-phishing`](https://github.com/SnailSploit/claude-red/blob/main/Skills/social-engineering/offensive-phishing/SKILL.md) | [`detect-phishing`](Skills/social-engineering/detect-phishing/SKILL.md) | Consent-phishing detection from the OAuth writeup; email-phishing controls next | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-phishing) |
+| [`offensive-social-engineering`](https://github.com/SnailSploit/claude-red/blob/main/Skills/social-engineering/offensive-social-engineering/SKILL.md) | [`defend-social-engineering`](Skills/social-engineering/defend-social-engineering/SKILL.md) | Awareness, vishing and physical controls, process hardening | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-social-engineering) |
 
 ## Network
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-network-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/network/offensive-network-attacks/SKILL.md) | [`detect-l2-l3-attacks`](Skills/network/detect-l2-l3-attacks/SKILL.md) | ARP, LLMNR, and DNS poisoning detection, DHCP snooping | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-network-attacks`](https://github.com/SnailSploit/claude-red/blob/main/Skills/network/offensive-network-attacks/SKILL.md) | [`detect-l2-l3-attacks`](Skills/network/detect-l2-l3-attacks/SKILL.md) | ARP, LLMNR, and DNS poisoning detection, DHCP snooping | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-l2-l3-attacks) |
 
 ## AI Security
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-ai-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/ai/offensive-ai-security/SKILL.md) | [`defend-llm-top-10`](Skills/ai/defend-llm-top-10/SKILL.md) | OWASP LLM Top 10 for defenders: prompt injection, RAG poisoning, output handling | 1 |
-| [`offensive-ai-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/ai/offensive-ai-security/SKILL.md) | [`defend-ai-agents`](Skills/ai/defend-ai-agents/SKILL.md) | Securing tool-calling agents, least-privilege tool scopes, injection containment | 1 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-ai-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/ai/offensive-ai-security/SKILL.md) | [`defend-llm-top-10`](Skills/ai/defend-llm-top-10/SKILL.md) | OWASP LLM Top 10 for defenders: prompt injection, RAG poisoning, output handling | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-llm-top-10) |
+| [`offensive-ai-security`](https://github.com/SnailSploit/claude-red/blob/main/Skills/ai/offensive-ai-security/SKILL.md) | [`defend-ai-agents`](Skills/ai/defend-ai-agents/SKILL.md) | Securing tool-calling agents, least-privilege tool scopes, injection containment | 1 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defend-ai-agents) |
 
 ## Utility
 
-| claude-red | umbra-blue | Defensive focus | Tier |
-|---|---|---|---|
-| [`offensive-fast-checking`](https://github.com/SnailSploit/claude-red/blob/main/Skills/utility/offensive-fast-checking/SKILL.md) | [`defensive-fast-triage`](Skills/utility/defensive-fast-triage/SKILL.md) | Fast blue-team triage checklist, from the Blue Team Mapper | 2 |
-| [`offensive-reporting`](https://github.com/SnailSploit/claude-red/blob/main/Skills/utility/offensive-reporting/SKILL.md) | [`defensive-reporting`](Skills/utility/defensive-reporting/SKILL.md) | Detection and incident reporting, every claim tied to a source | 2 |
+| claude-red | umbra-blue | Defensive focus | Tier | Mapper |
+|---|---|---|---|---|
+| [`offensive-fast-checking`](https://github.com/SnailSploit/claude-red/blob/main/Skills/utility/offensive-fast-checking/SKILL.md) | [`defensive-fast-triage`](Skills/utility/defensive-fast-triage/SKILL.md) | Fast blue-team triage checklist, from the Blue Team Mapper | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defensive-fast-triage) |
+| [`offensive-reporting`](https://github.com/SnailSploit/claude-red/blob/main/Skills/utility/offensive-reporting/SKILL.md) | [`defensive-reporting`](Skills/utility/defensive-reporting/SKILL.md) | Detection and incident reporting, every claim tied to a source | 2 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/defensive-reporting) |
