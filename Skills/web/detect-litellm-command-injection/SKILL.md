@@ -23,11 +23,11 @@ The October 2026 incident is different in kind: the 1.107.0 release itself was p
 
 Collect host-based and network telemetry: the host sources are the high-fidelity detections and the network ones are the earlier, noisier signals.
 
-- **Process creation on the LiteLLM host (Linux)** for rule 1: Linux auditd execve telemetry, Sysmon for Linux, or your EDR. In containers this is container runtime / EDR process visibility. Fields: `ParentImage` and `Image` (the rule keys off a python/uvicorn/gunicorn parent spawning a shell or recon child), and `ParentCommandLine` if your telemetry includes it, to scope to LiteLLM. This is the detection that matters most.
+- **Process creation on the LiteLLM host (Linux)** for rule 1: Linux auditd execve telemetry, Sysmon for Linux, or your EDR. In containers this is container runtime / EDR process visibility. Fields: `ParentImage` and `Image` (the rule keys off a python, versioned python3.x, uvicorn or gunicorn parent spawning a shell, busybox, or recon child), and `ParentCommandLine` if your telemetry includes it, to scope to LiteLLM. This is the detection that matters most.
 - **Front-door HTTP access logs** for rule 2, from whatever sits in front of LiteLLM (nginx, Caddy, Traefik, ingress, or API gateway): method, URI path, source, and ideally the Host header. Fields: Sigma webserver taxonomy `cs-method` and `cs-uri-stem` (nginx and others name them differently; adapt). This catches the attempt at the front door even without host telemetry.
 - **LiteLLM's own logs** for the authenticated context: which API key or user made the request. Useful for scoping once an alert fires.
 - **File creation telemetry on the LiteLLM host (Linux and Windows)** for rules 3 and 4: Sysmon for Linux / auditd / EDR on Linux, Sysmon Event ID 11 or EDR file telemetry on Windows. Field: `TargetFilename`. The rules use suffix matches so host sensors on a Docker or Kubernetes node, which see container writes under the overlay or rootfs path, still fire.
-- **Forward proxy / egress logs** for rule 5: Field `cs-host`, with `c-uri` as a fallback for proxies that log the host with a port or only log the full URL. Where your proxy retains request headers, the hardcoded `X-Token: XWiA8gZNa7NcX2XRoAEb` header and an Internet Explorer 7 user agent on a POST from a Python host confirm the stealer.
+- **Forward proxy / egress logs** for rule 5: Field `cs-host`, which the rule matches with or without a port or trailing dot, and `c-uri` for proxies that only log the full URL. Where your proxy retains request headers, the hardcoded `X-Token: XWiA8gZNa7NcX2XRoAEb` header and an Internet Explorer 7 user agent on a POST from a Python host confirm the stealer.
 
 If you have no host or container process telemetry, rule 2 (the front-door endpoint rule) is your only stopgap for the command injection until you fix that collection gap.
 
@@ -49,13 +49,16 @@ description: >
     or a common recon/download utility. A web proxy has no legitimate
     reason to do this; consistent with exploitation of CVE-2026-42271,
     where the MCP stdio preview endpoints spawn an attacker-supplied
-    command on the proxy host.
+    command on the proxy host. Sensors often report the resolved binary, so
+    the rule also lists versioned interpreter names, the Debian/Ubuntu names
+    nc resolves to, and busybox, which is /bin/sh on Alpine and Wolfi images.
 references:
     - https://nvd.nist.gov/vuln/detail/CVE-2026-42271
     - https://github.com/BerriAI/litellm/security/advisories/GHSA-v4p8-mg3p-g94g
     - https://umbrasec.dev/research/detecting-litellm-command-injection.html
 author: UMBRASEC
 date: 2026-06-13
+modified: 2026-10-23
 tags:
     - attack.initial-access
     - attack.t1190
@@ -69,6 +72,12 @@ detection:
         ParentImage|endswith:
             - '/python'
             - '/python3'
+            - '/python3.9'
+            - '/python3.10'
+            - '/python3.11'
+            - '/python3.12'
+            - '/python3.13'
+            - '/python3.14'
             - '/uvicorn'
             - '/gunicorn'
     selection_child:
@@ -81,15 +90,21 @@ detection:
             - '/nc'
             - '/ncat'
             - '/nohup'
+            - '/busybox'
+            - '/nc.openbsd'
+            - '/nc.traditional'
+            - '/netcat'
     condition: selection_parent and selection_child
 falsepositives:
     - Init/entrypoint scripts that legitimately shell out at container start
     - Health-check or sidecar tooling that wraps the proxy in a shell
     - Scope to LiteLLM hosts/containers to cut generic python parent noise
+    - On busybox-based images every shell and utility runs as /bin/busybox,
+      so the entrypoint and health-check cases above appear under that name too
 level: high
 ```
 
-**Tuning.** Parenting on a generic python is broad, so scope this to your LiteLLM hosts or containers (by host tag, image name, or a more specific `ParentCommandLine|contains: 'litellm'` where the command line is captured). Baseline in report-only mode first: container start-up frequently runs a shell entrypoint once, so allowlist that known parent/child pair. The signal you care about is a shell or network utility appearing under the proxy at request time, long after startup.
+**Tuning.** Parenting on a generic python is broad, so scope this to your LiteLLM hosts or containers (by host tag, image name, or a more specific `ParentCommandLine|contains: 'litellm'` where the command line is captured). Baseline in report-only mode first: container start-up frequently runs a shell entrypoint once, so allowlist that known parent/child pair. On busybox-based images such as Alpine or Wolfi the entrypoint shell appears as `/bin/busybox`, so allowlist it under that name. The signal you care about is a shell or network utility appearing under the proxy at request time, long after startup.
 
 ### 2. Requests to the vulnerable MCP preview endpoints (front-door signal)
 
@@ -287,15 +302,16 @@ description: >
     second stage read a domain from a GitHub dead drop
     (letters9813/pythonclient-test) and would have fetched
     http://<domain>/codepy; the repo is gone and the drop was never
-    populated beyond test values, so it is not matched here. The URI
-    selection is a fallback for proxies that log the host with a port or
-    only log the full URL.
+    populated beyond test values, so it is not matched here. Hosts logged
+    with a port or with a trailing dot are matched. The URI selection covers
+    proxies that only log the full URL.
 references:
     - https://docs.litellm.ai/blog/security-incident-oct-21-2026
     - https://www.wiz.io/blog/litellm-compromised-steals-credentials
     - https://litellm.ai
 author: UMBRASEC
 date: 2026-10-23
+modified: 2026-10-23
 tags:
     - attack.exfiltration
     - attack.t1041
@@ -303,9 +319,21 @@ logsource:
     category: proxy
 detection:
     selection_host:
-        cs-host: 'litellm.dev'
+        cs-host:
+            - 'litellm.dev'
+            - 'litellm.dev.'
     selection_subdomain:
-        cs-host|endswith: '.litellm.dev'
+        cs-host|endswith:
+            - '.litellm.dev'
+            - '.litellm.dev.'
+    selection_hostport:
+        cs-host|startswith:
+            - 'litellm.dev:'
+            - 'litellm.dev.:'
+    selection_subdomain_port:
+        cs-host|contains:
+            - '.litellm.dev:'
+            - '.litellm.dev.:'
     selection_uri:
         c-uri|contains:
             - '//litellm.dev'
@@ -321,7 +349,7 @@ level: high
 
 ## Tuning and false positives
 
-- **Rule 1 (process spawn).** Baseline in report-only mode and scope to LiteLLM hosts before enforcing; the generic python parent is the main noise source. Allowlist the container's known start-up shell entrypoint. Thresholds and scope are dials.
+- **Rule 1 (process spawn).** Baseline in report-only mode and scope to LiteLLM hosts before enforcing; the generic python parent is the main noise source. Allowlist the container's known start-up shell entrypoint, which shows as `/bin/busybox` on busybox-based images. Thresholds and scope are dials.
 - **Rule 2 (endpoint).** Expect legitimate admin previews and, after disclosure, vulnerability scanners probing the path. Allowlist known admin source addresses and treat the rest as high. Adapt the webserver field names to your proxy schema.
 - **Rules 3 and 4 (dropped files).** Near-binary indicator matches; the only realistic benign hit is a package legitimately named cook with a .pth hook, so verify package metadata before closing.
 - **Rule 5 (exfil domain).** High confidence by construction. Retire it if litellm.dev ever changes ownership, because the signal is the domain rather than any behaviour.

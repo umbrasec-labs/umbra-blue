@@ -8,6 +8,10 @@ All notable changes to `umbra-blue` are documented here. Versions follow [Semant
 
 - **Blue Team Mapper links.** Every skill now links to its page in the [Blue Team Mapper](https://umbrasec-labs.github.io/BlueTeamMapper/), which shows the skill's techniques and any UMBRASEC rules for them. For techniques in the mapper matrix, the page also shows the matrix rows, the response flow chains, and the reader's own coverage. The link appears in a new Mapper column in the README skill index and in `COVERAGE.md`, and as a `mapper` URL field on each skill in `claude-skills.json`. `tools/build_manifest.py` generates all three from one base URL.
 
+### Changed
+
+- **Re-synced four upstream sigma-pack rule fixes.** `tools/sync_rules.py` refreshed every inlined copy, and the skill prose that described the old logic now matches. `metabase-reset-password-sqli.yml` escapes the `/*` comment marker, which Sigma read as a wildcard that matched any query string containing a slash ([umbrasec.dev issue #3](https://github.com/umbrasec-labs/umbrasec.dev/issues/3)), and adds percent-encoded markers for access logs that keep the query string encoded (`detect-metabase-sqli`, `monitor-external-attack-surface`). `litellm-proxy-spawns-shell.yml` adds versioned `python3.9` to `python3.14` parents and `busybox`, `nc.openbsd`, `nc.traditional` and `netcat` children (`detect-litellm-command-injection`). `litellm-stealer-exfil.yml` matches `cs-host` logged with a port or a trailing dot, so the `c-uri` selection is now only for proxies that log the full URL (`detect-litellm-command-injection`, `detect-data-exfiltration`). `kerberoasting-spn-fanout.yml` gains a `falsepositives` section for scanners, monitoring accounts and busy legitimate accounts (`detect-kerberoasting`).
+
 ### Planned
 
 - Promote Tier 2 skills to Tier 1 as UMBRASEC writeups and sigma-pack rules land

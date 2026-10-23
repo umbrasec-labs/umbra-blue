@@ -86,6 +86,8 @@ description: >
     6 August 2026, and CISA added the CVE to the KEV catalog on 11 August.
     The vendor's own interim workaround is to block this endpoint outright, so
     on a patched and hardened instance any match here is worth review.
+    The markers are matched both literally and percent-encoded, because many
+    access logs keep the query string encoded.
     Limitation: this matches metacharacters in the request line only. An
     exploit that carries its payload in the POST body is invisible to
     webserver-category logs, so pair this with body-capturing proxy or WAF
@@ -97,6 +99,7 @@ references:
     - https://umbrasec.dev/research/mathspace-metabase-internal-tooling.html
 author: UMBRASEC
 date: 2026-09-17
+modified: 2026-10-23
 tags:
     - attack.initial-access
     - attack.t1190
@@ -115,8 +118,19 @@ detection:
             - 'sleep('
             - 'pg_sleep'
             - '--'
-            - '/*'
+            - '/\*'
             - ';'
+            - '%27'
+            - '%20or%20'
+            - '+or+'
+            - '%20and%20'
+            - '+and+'
+            - 'sleep%28'
+            - '%2d%2d'
+            - '%2f%2a'
+            - '%2f\*'
+            - '/%2a'
+            - '%3b'
     condition: endpoint and sqli_markers
 falsepositives:
     - Vulnerability scanners probing the path after public disclosure
