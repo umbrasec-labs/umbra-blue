@@ -41,7 +41,7 @@ Tuning and false positives, since Tier 2 has no separate tuning section: bot and
 
 Public rule and tooling sources to build on, rather than inventing a rule here:
 
-- SigmaHQ cloud rules for GitHub audit activity: https://github.com/SigmaHQ/sigma/tree/master/rules/cloud/github and for AWS CloudTrail: https://github.com/SigmaHQ/sigma/tree/master/rules/cloud/aws/cloudtrail
+- SigmaHQ rules for GitHub audit activity: https://github.com/SigmaHQ/sigma/tree/master/rules/application/github/audit and for AWS CloudTrail: https://github.com/SigmaHQ/sigma/tree/master/rules/cloud/aws/cloudtrail
 - GitHub secret scanning and push protection: https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning and https://docs.github.com/en/code-security/secret-scanning/introduction/about-push-protection
 - GitLab Secret Detection: https://docs.gitlab.com/ee/user/application_security/secret_detection/
 - Gitleaks (open-source scanner): https://github.com/gitleaks/gitleaks and TruffleHog: https://github.com/trufflesecurity/trufflehog

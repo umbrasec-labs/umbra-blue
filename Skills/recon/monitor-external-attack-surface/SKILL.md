@@ -9,7 +9,7 @@ An attacker's first move against an organization is rarely an exploit; it is rec
 
 ## TL;DR for defenders
 
-Keep a live inventory of everything you expose to the internet, then run the UMBRASEC [kev-watch](https://umbrasec.dev/tools/kev-watch/) tool daily against the CISA KEV feed, filtered to the vendors and products you actually run, so a newly exploited CVE in your stack pages you the morning it lands. Patch KEV items on internet-facing services inside the Essential Eight 48-hour window. Where you cannot patch at once, watch the edge: webserver, WAF, and reverse-proxy logs for probing and exploitation of the exposed endpoint. The highest-value, lowest-effort control here is the daily KEV-to-asset check - it is a public JSON feed and a cron job, and it is the single best public signal for "patch this now".
+Keep a live inventory of everything you expose to the internet, then run the UMBRASEC [kev-watch](https://github.com/umbrasec-labs/umbrasec.dev/tree/master/tools/kev-watch) tool daily against the CISA KEV feed, filtered to the vendors and products you actually run, so a newly exploited CVE in your stack pages you the morning it lands. Patch KEV items on internet-facing services inside the Essential Eight 48-hour window. Where you cannot patch at once, watch the edge: webserver, WAF, and reverse-proxy logs for probing and exploitation of the exposed endpoint. The highest-value, lowest-effort control here is the daily KEV-to-asset check - it is a public JSON feed and a cron job, and it is the single best public signal for "patch this now".
 
 ## Why it still matters in 2026
 
@@ -159,7 +159,7 @@ KEV is a floor, not a ceiling: it lists only confirmed in-the-wild exploitation,
 
 - MITRE ATT&CK: [T1595 Active Scanning](https://attack.mitre.org/techniques/T1595/) (incl. [T1595.002 Vulnerability Scanning](https://attack.mitre.org/techniques/T1595/002/)), [T1596.005 Scan Databases](https://attack.mitre.org/techniques/T1596/005/), [T1592 Gather Victim Host Information](https://attack.mitre.org/techniques/T1592/) (Reconnaissance, TA0043); [T1190 Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) (Initial Access).
 - MITRE D3FEND: D3-AI Asset Inventory, D3-NNI Network Node Inventory, D3-AVE Asset Vulnerability Enumeration, D3-NTA Network Traffic Analysis.
-- UMBRASEC tool: [kev-watch](https://umbrasec.dev/tools/kev-watch/) - zero-dependency CISA KEV monitor.
+- UMBRASEC tool: [kev-watch](https://github.com/umbrasec-labs/umbrasec.dev/tree/master/tools/kev-watch) - zero-dependency CISA KEV monitor.
 - UMBRASEC writeup: [Sixteen Days From KEV to Exfiltration: What the Mathspace Breach Says About Internal Tooling](https://umbrasec.dev/research/mathspace-metabase-internal-tooling.html) (2026-09-17).
 - UMBRASEC [sigma-pack](https://umbrasec.dev/tools/sigma-pack/); canonical rule `metabase-reset-password-sqli.yml`.
 - CISA [Known Exploited Vulnerabilities Catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog).

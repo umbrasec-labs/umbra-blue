@@ -34,7 +34,7 @@ UNINSTALL=0
 LIST_ONLY=0
 
 usage() {
-  sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 

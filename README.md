@@ -382,10 +382,7 @@ Contributions and corrections are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md
 ## Acknowledgements
 
 - **Author:** [UMBRASEC](https://umbrasec.dev), an independent defensive security practice.
-- **Inspiration:** [claude-red](https://github.com/SnailSploit/claude-red) by SnailSploit, the offensive library this project mirrors. umbra-blue is an independent project and is not affiliated with or endorsed by SnailSploit.
 - **Public rule sources** referenced by Tier 2 skills: [SigmaHQ](https://github.com/SigmaHQ/sigma), [MITRE ATT&CK](https://attack.mitre.org/), and [MITRE D3FEND](https://d3fend.mitre.org/).
-
-Not affiliated with Anthropic. Claude is a trademark of Anthropic.
 
 ---
 

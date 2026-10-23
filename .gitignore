@@ -2,3 +2,6 @@
 __pycache__/
 *.pyc
 .venv/
+# Local Claude Code session files
+.claude/
+.mcp.json
