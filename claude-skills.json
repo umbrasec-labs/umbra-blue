@@ -1,0 +1,913 @@
+{
+  "name": "umbra-blue",
+  "version": "0.1.0",
+  "license": "MIT",
+  "homepage": "https://github.com/umbrasec-labs/umbra-blue",
+  "upstream": "https://github.com/SnailSploit/claude-red",
+  "categories": {
+    "web": [
+      "defend-open-redirect",
+      "detect-business-logic-abuse",
+      "detect-deserialization",
+      "detect-graphql-abuse",
+      "detect-hpp",
+      "detect-idor",
+      "detect-litellm-command-injection",
+      "detect-malicious-upload",
+      "detect-metabase-sqli",
+      "detect-request-smuggling",
+      "detect-ssrf",
+      "detect-ssti",
+      "detect-web-race-condition",
+      "detect-xss",
+      "detect-xxe",
+      "harden-waf"
+    ],
+    "auth": [
+      "defend-jwt",
+      "detect-oauth-consent-phishing"
+    ],
+    "active-directory": [
+      "detect-ad-credential-abuse",
+      "detect-kerberoasting"
+    ],
+    "wireless": [
+      "detect-deauth",
+      "detect-rogue-ap",
+      "detect-wifi-attacks",
+      "detect-wifi-recon",
+      "harden-ble",
+      "harden-bluetooth-classic",
+      "harden-lorawan-sub-ghz",
+      "harden-wpa-enterprise",
+      "harden-wpa2",
+      "harden-wpa3",
+      "harden-wps",
+      "harden-z-wave",
+      "harden-zigbee-thread-matter",
+      "patch-krack-fragattacks"
+    ],
+    "cloud": [
+      "detect-cloud-attack-paths"
+    ],
+    "mobile": [
+      "harden-mobile-apps"
+    ],
+    "iot": [
+      "harden-iot"
+    ],
+    "infrastructure": [
+      "detect-edr-evasion",
+      "detect-initial-access",
+      "detect-keyloggers",
+      "detect-redteam-ttps",
+      "detect-shellcode-injection",
+      "harden-windows-boundaries",
+      "verify-windows-mitigations"
+    ],
+    "exploit-dev": [
+      "defend-exploit-mitigations",
+      "defend-memory-corruption",
+      "detect-toctou-races",
+      "triage-crashes-defensively",
+      "verify-exploit-mitigations"
+    ],
+    "fuzzing": [
+      "integrate-fuzzing-sdlc",
+      "triage-vuln-classes"
+    ],
+    "recon": [
+      "monitor-external-attack-surface",
+      "reduce-osint-exposure"
+    ],
+    "api": [
+      "detect-api-business-logic-abuse",
+      "harden-api-security"
+    ],
+    "container": [
+      "detect-container-escape",
+      "harden-k8s"
+    ],
+    "cicd": [
+      "detect-cicd-secret-exposure",
+      "harden-cicd-pipeline"
+    ],
+    "crypto": [
+      "harden-crypto-implementations",
+      "harden-tls"
+    ],
+    "privesc": [
+      "detect-linux-privesc",
+      "detect-windows-privesc"
+    ],
+    "post-exploitation": [
+      "detect-data-exfiltration",
+      "detect-lateral-movement",
+      "detect-ncentral-post-exploitation"
+    ],
+    "forensics": [
+      "detect-anti-forensics",
+      "detect-c2-beaconing"
+    ],
+    "supply-chain": [
+      "detect-dependency-confusion",
+      "detect-supply-chain-compromise"
+    ],
+    "social-engineering": [
+      "defend-social-engineering",
+      "detect-phishing"
+    ],
+    "network": [
+      "detect-l2-l3-attacks"
+    ],
+    "ai": [
+      "defend-ai-agents",
+      "defend-llm-top-10"
+    ],
+    "utility": [
+      "defensive-fast-triage",
+      "defensive-reporting"
+    ]
+  },
+  "skills": [
+    {
+      "name": "detect-ad-credential-abuse",
+      "category": "active-directory",
+      "path": "Skills/active-directory/detect-ad-credential-abuse/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-active-directory"
+      ],
+      "description": "Detection, hunting, and hardening methodology for Active Directory credential abuse that follows initial foothold: AS-REP Roasting (MITRE ATT&CK T1558.004), DCSync directory replication theft (T1003.006), ACL and group manipulation (T1098), and Kerberos delegation abuse (T1098 setup, T1550.003 use). Primary log sources are Windows domain controller Security events (4768, 4662, 5136, 4738, 4742, 4728/4732/4756) plus Microsoft Defender for Identity alerts and network DRSUAPI replication traffic. The skill gives the defender view of each technique, the exact events and object GUIDs to key off, a hypothesis-driven hunt, and framework-mapped hardening. Use when triaging an MDI DCSync or delegation alert, hunting for replication from a non-domain-controller, investigating accounts with Kerberos pre-authentication disabled, reviewing who holds DS-Replication rights, chasing writes to ntSecurityDescriptor or msDS-AllowedToActOnBehalfOfOtherIdentity, or hardening AD against post-foothold credential abuse."
+    },
+    {
+      "name": "detect-kerberoasting",
+      "category": "active-directory",
+      "path": "Skills/active-directory/detect-kerberoasting/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-active-directory"
+      ],
+      "description": "Detection and response methodology for Kerberoasting in Active Directory (MITRE ATT&CK T1558.003, Credential Access). Covers the RC4 service-ticket downgrade signal, SPN request fan-out, and the honeypot-SPN tripwire - three layered Sigma detections keyed off Windows Security Event ID 4769 on domain controllers, each with tuning, false-positive notes, and gMSA/AES mitigations. Use when investigating suspicious Kerberos service-ticket activity, writing or reviewing Kerberoasting detections, hunting for SPN enumeration, triaging 4769 alerts, or hardening service accounts against offline password cracking."
+    },
+    {
+      "name": "defend-ai-agents",
+      "category": "ai",
+      "path": "Skills/ai/defend-ai-agents/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-ai-security"
+      ],
+      "description": "Securing and monitoring tool-calling AI agents against excessive agency and indirect prompt injection, where one hostile instruction becomes a real action such as sending email, moving money, or exfiltrating data (MITRE ATLAS AML.T0051, AML.T0051.001, AML.T0053; OWASP LLM06). Keys off agent tool-call telemetry from your agent harness or LLM gateway: tool/function-call events, tool-result provenance, and human-approval decisions. Ships three behavioural detections (out-of-profile tool invocation, consequential action after untrusted input, autonomy/loop anomalies), a least-privilege containment architecture, framework mappings, and a hunt. Use when reviewing an agent's tool scopes, vetting MCP servers, containing prompt injection in a tool-calling LLM, writing detections over agent tool-call logs, triaging an agent that took an unexpected action, or hardening against the confused-deputy problem."
+    },
+    {
+      "name": "defend-llm-top-10",
+      "category": "ai",
+      "path": "Skills/ai/defend-llm-top-10/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-ai-security"
+      ],
+      "description": "Defensive playbook for the OWASP Top 10 for LLM Applications (2025), centered on prompt injection (MITRE ATLAS AML.T0051, direct and indirect), RAG retrieval abuse (LLM08), and improper output handling (LLM05). Prompt injection has no patch, so defense is logging, blast-radius design, and breaking the lethal-trifecta exfiltration path, as seen in EchoLeak (CVE-2025-32711). Keys off LLM app telemetry: prompt and completion logs, tool-call audit events, RAG retrieval logs, guardrail verdicts, the Purview unified audit log for Copilot, and Azure OpenAI diagnostics. Ships a canary-token tripwire, an egress/exfiltration detection, a tool-call fan-out rule, required logging, and a mitigation table. Use when threat-modeling an LLM, RAG, or agent feature, deciding what to log, writing detections for prompt injection or system-prompt leakage, hunting copilot data exfiltration, or triaging an EchoLeak-style incident."
+    },
+    {
+      "name": "detect-api-business-logic-abuse",
+      "category": "api",
+      "path": "Skills/api/detect-api-business-logic-abuse/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-api-abuse"
+      ],
+      "description": "Detection and response methodology for API business logic abuse - BOLA / IDOR (OWASP API1:2023), request-rate abuse (API4:2023), and out-of-order workflow attacks against REST and GraphQL APIs (MITRE ATT&CK T1190, with high-volume enumeration resembling T1595). Works off API gateway and reverse-proxy access logs (nginx, Apache, AWS ALB / API Gateway, Azure APIM and Front Door, Cloudflare) plus WAF and application audit logs. Gives the method for spotting one principal touching object IDs across many owners, per-principal velocity spikes, and workflow step-skipping, plus public rule sources and object-level-authorization hardening. Use when investigating suspicious API access, hunting for IDOR or BOLA enumeration, triaging a spike of 403 or 404 responses from one token, building rate or sequence anomaly detection, or hardening an API against BOLA."
+    },
+    {
+      "name": "harden-api-security",
+      "category": "api",
+      "path": "Skills/api/harden-api-security/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-api-security"
+      ],
+      "description": "Defensive methodology for API-layer abuse across REST, gRPC, and WebSocket: broken object- and function-level authorization (BOLA/BFLA), broken authentication and token replay, mass assignment, SSRF from URL-accepting parameters, and unrestricted resource consumption (MITRE ATT&CK T1190, T1078, T1528, T1552.005, T1499.003). Keys off API gateway and reverse-proxy access logs (AWS API Gateway, Azure APIM, Kong, Envoy/Istio), WAF logs (AWS WAF, Azure Front Door/App Gateway), and application authorization-decision logs. Gives the defender view, log sources, a detection approach pointing to public rule sources, a hypothesis-driven hunt, and gateway plus authorization hardening. Use when hardening a REST/gRPC/WebSocket API, writing API-abuse detections, hunting for BOLA/IDOR enumeration or BFLA, triaging bursts of 401/403/429 on an API gateway, or designing edge authorization and schema-validation controls."
+    },
+    {
+      "name": "defend-jwt",
+      "category": "auth",
+      "path": "Skills/auth/defend-jwt/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-jwt"
+      ],
+      "description": "Defensive methodology against JSON Web Token (JWT) forgery and verification bypass: the alg:none downgrade, RS256-to-HS256 key confusion, unverified signatures, and missing claim checks that let an attacker mint a token your app will trust (MITRE ATT&CK T1606 Forge Web Credentials, then T1550.001 Use Alternate Authentication Material: Application Access Token). Signals live in application and API-gateway logs, WAF logs, and auth-service logs: the decoded JWT header alg and kid, the iss/aud/exp claims, and signature-verification failures. This skill gives the defender view of each bypass, the exact fields to log and alert on, a hypothesis-driven hunt, and library and key-management hardening mapped to ISO 27001:2022 and NIST CSF 2.0. Use when hardening JWT or bearer-token validation, reviewing a JWT auth flow, hunting for alg:none or key-confusion forgery, triaging a spike in JWT signature failures, or deciding how to rotate signing keys."
+    },
+    {
+      "name": "detect-oauth-consent-phishing",
+      "category": "auth",
+      "path": "Skills/auth/detect-oauth-consent-phishing/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-oauth"
+      ],
+      "description": "Detection and response methodology for OAuth consent phishing / illicit consent grants in Microsoft 365 and Entra ID (MITRE ATT&CK T1528). An attacker phishes a user into consenting to an OAuth app with delegated Graph permissions such as Mail.Read and offline_access, so no password is stolen and MFA is never challenged, yet the refresh token is a durable key to mail and files. Ships three KQL detections over Entra AuditLogs 'Consent to application' and app-role-assignment events and MicrosoftGraphActivityLogs oauth2PermissionGrants, with tuning, false-positive notes, a hunt, and consent-restriction mitigations. Use when investigating a suspicious enterprise app or consent grant, triaging a 'Consent to application' event, hunting illicit OAuth grants or refresh-token abuse in Entra ID, writing consent-phishing detections, or responding to a Midnight Blizzard-style app-consent attack."
+    },
+    {
+      "name": "detect-cicd-secret-exposure",
+      "category": "cicd",
+      "path": "Skills/cicd/detect-cicd-secret-exposure/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-cicd-secrets"
+      ],
+      "description": "Detection, hunting, and hardening methodology for secrets exposed in CI/CD pipelines: deployment keys, cloud tokens, API secrets, and registry passwords leaked through build logs, caches, artifacts, credential stores, and OIDC federation trust. Maps to MITRE ATT&CK T1552 Unsecured Credentials and its sub-techniques T1552.001 Credentials In Files, T1552.004 Private Keys, and T1552.007 Container API. Keys off GitHub and GitLab audit logs, CI job logs, AWS CloudTrail, Azure Key Vault diagnostic logs, GCP Cloud Audit Logs, and HashiCorp Vault audit devices. Gives the defender's method for spotting a leaked or abused pipeline secret, a hypothesis-driven hunt, and least-privilege hardening, and points to public rule sources. Use when investigating a possible CI/CD secret leak, a secret-scanning alert, an unexpected GetSecretValue or AccessSecretVersion, an AssumeRoleWithWebIdentity from a pipeline, a push-protection bypass, or when hardening GitHub Actions, GitLab CI, Jenkins, or Azure DevOps secret handling."
+    },
+    {
+      "name": "harden-cicd-pipeline",
+      "category": "cicd",
+      "path": "Skills/cicd/harden-cicd-pipeline/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-cicd-pipeline"
+      ],
+      "description": "Defensive methodology for CI/CD pipeline compromise: expression and workflow injection that turns attacker-controlled PR titles, branch names, and issue bodies into runner command execution, over-broad OIDC federation that hands the wrong repo or branch cloud credentials, and self-hosted runner abuse (MITRE ATT&CK T1195.002, T1059, T1199, T1078.004, T1552.004, T1098.001). Signals live in the GitHub/GitLab/Azure DevOps audit log, runner process and EDR telemetry, and cloud federation logs (AWS CloudTrail AssumeRoleWithWebIdentity, Entra ID service-principal sign-ins, GCP STS). Gives the defender view, what to log and alert on, a hunt, and OIDC, runner-isolation, and workflow-injection hardening. Use when hardening GitHub Actions, GitLab CI, or Azure Pipelines, reviewing an OIDC trust policy, hunting for poisoned pipeline execution, triaging an unexpected AssumeRoleWithWebIdentity, or isolating self-hosted runners."
+    },
+    {
+      "name": "detect-cloud-attack-paths",
+      "category": "cloud",
+      "path": "Skills/cloud/detect-cloud-attack-paths/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-cloud"
+      ],
+      "description": "Detection and hunt methodology for cloud IAM attack paths across AWS, Azure, and GCP: privilege-escalation chains, credential and role manipulation, and control-plane log tampering that turn a foothold into tenant-wide control (MITRE ATT&CK T1078.004, T1098/.001/.003, T1136.003, T1548.005, T1562.008, T1580). Keys off AWS CloudTrail management events, Microsoft Entra ID audit and sign-in logs plus Azure Activity Log, and GCP Cloud Audit Logs, naming the exact event and identity fields to pivot on, then points to public rule sources and gives hardening mapped to the UMBRASEC guide. Use when triaging a suspicious IAM change, hunting cloud privilege escalation, investigating new access keys or role grants, chasing CloudTrail being disabled, writing or reviewing cloud control-plane detections, or asking how to detect cloud attack paths."
+    },
+    {
+      "name": "detect-container-escape",
+      "category": "container",
+      "path": "Skills/container/detect-container-escape/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-container-escape"
+      ],
+      "description": "Detection, hunting, and hardening for container escape to the host (MITRE ATT&CK T1611 Escape to Host, Privilege Escalation; related T1610 Deploy Container and T1613 Container and Resource Discovery). Keys off Linux auditd syscall records, CNCF Falco and eBPF runtime sensors, and the Kubernetes kube-apiserver audit log to catch namespace breakout, privileged or sensitive-mount workloads, capability abuse, and host-namespace process execution. Gives the defender view, the exact log sources and fields, a prose detection approach pointing to public rule sources, a hypothesis-driven hunt, seccomp and capability hardening, and the honest blind spots. Use when detecting or hunting container escape, investigating a shell spawned in a container, triaging a privileged pod or hostPath mount alert, monitoring seccomp and Linux capabilities on container hosts, or hardening Docker and Kubernetes against breakout to the node."
+    },
+    {
+      "name": "harden-k8s",
+      "category": "container",
+      "path": "Skills/container/harden-k8s/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-k8s-attacks"
+      ],
+      "description": "Defensive methodology for Kubernetes cluster attacks: over-privileged RBAC and stolen service-account tokens driving the API server, interactive access to running workloads, and attacker-deployed or privileged pods used to escape to the node and persist (MITRE ATT&CK T1078, T1552.007, T1609, T1610, T1525, T1611, T1613, T1053.007). Signals live in the Kubernetes API server audit log and its managed equivalents (EKS control-plane logs, GKE Cloud Audit Logs, AKSAudit tables) plus Falco runtime events. Gives the defender view of each path, the audit fields to alert on, a hunt, and RBAC, admission-control, and audit-logging hardening mapped to the UMBRASEC guide. Use when hardening a Kubernetes cluster, reviewing RBAC roles and bindings, designing PodSecurity or Kyverno/Gatekeeper admission policy, tuning API server audit logging, hunting a privileged-pod foothold, or triaging an unexpected clusterrolebinding change or pods/exec event."
+    },
+    {
+      "name": "harden-crypto-implementations",
+      "category": "crypto",
+      "path": "Skills/crypto/harden-crypto-implementations/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-crypto-attacks"
+      ],
+      "description": "Defensive methodology against exploitation of broken application cryptography: CBC padding oracles, AES-GCM and stream-cipher nonce/IV reuse, and weak-primitive misuse (ECB, DES/3DES, RC4, MD5/SHA-1, RSA PKCS#1 v1.5, static IVs) that let an attacker decrypt, forge, or tamper with protected data (MITRE ATT&CK T1557, T1600, T1040). Signals live in web and application error logs, crypto-library exceptions, WAF and reverse-proxy logs, and Zeek ssl.log; much exposure shows only in code and TLS config. Gives the defender view of each flaw class, the errors to log and alert on, a hunt across logs and source, and primitive-level hardening mapped to public standards and, where they ground, UMBRASEC guide controls. Use when hardening or reviewing an encryption implementation, triaging a burst of padding or decryption errors, hunting a padding-oracle probe, investigating weak cipher negotiation, or fixing nonce reuse or retiring a weak cipher."
+    },
+    {
+      "name": "harden-tls",
+      "category": "crypto",
+      "path": "Skills/crypto/harden-tls/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-tls-attacks"
+      ],
+      "description": "Cipher and protocol hardening plus config scanning for TLS/SSL endpoints against downgrade and weak-crypto abuse: deprecated protocols (SSLv2/SSLv3, TLS 1.0/1.1), weak ciphers (RC4, 3DES, EXPORT, NULL), missing forward secrecy, and certificate validation gaps that enable interception, forced downgrade, or passive decryption (MITRE ATT&CK T1557, T1040, T1600, T1562.010; CWE-295, CWE-319, CWE-757). Signals come from config scanners (testssl.sh, sslyze, sslscan, nmap), Zeek ssl.log, Suricata tls events, JA3/JA3S, nginx, Apache, and AWS ALB access logs, and Windows Schannel events. Gives the protocol and cipher baseline to enforce, the scan and network signals that prove it holds, a hunt, and framework-mapped hardening. Use when hardening a TLS endpoint, choosing a cipher suite or minimum protocol version, scanning for weak TLS, reviewing a load balancer or web server TLS config, triaging a weak-cipher finding, or hunting TLS downgrade."
+    },
+    {
+      "name": "defend-exploit-mitigations",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/defend-exploit-mitigations/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-exploit-development"
+      ],
+      "description": "Coverage-and-gaps methodology for the memory-corruption exploit mitigations that break an exploit before it runs attacker code: ASLR, DEP/NX, Control Flow Guard (CFG), and CET shadow stack (MITRE ATT&CK T1203, T1190, T1068, T1211, T1210; mitigation M1050). Signals: Windows Security-Mitigations channels, Application log Event IDs 1000 and 1001 with fast-fail and access-violation codes, Defender for Endpoint ExploitGuard events, and Linux auditd ANOM_ABEND, dmesg segfaults, and randomize_va_space. Shows which mitigations are enforced per image and host, how to find gaps with Get-ProcessMitigation, dumpbin, BinSkim, winchecksec, and checksec, how to hunt crash clusters, and how to harden with the Essential Eight. Use when verifying ASLR, DEP, CFG, or CET coverage, auditing exploit protection on a fleet, finding binaries without CFG or CETCOMPAT, triaging a 0xc0000409 fast-fail crash cluster, or building an exploit-mitigation baseline."
+    },
+    {
+      "name": "defend-memory-corruption",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/defend-memory-corruption/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-basic-exploitation",
+        "offensive-exploit-dev-course"
+      ],
+      "description": "Compiler and allocator hardening against memory-corruption exploitation - stack and heap buffer overflows, use-after-free, and integer overflows that attackers turn into code execution (MITRE ATT&CK T1203, T1068, T1210; D3FEND D3-PSEP, D3-SAOR, D3-SFCV, D3-SSC, D3-EHPV). Signals live in the Windows Application log (Event ID 1000, exception codes 0xc0000409, 0xc0000374, 0xc0000005), the Security-Mitigations channels, Sysmon process-creation events, and Linux journald/auditd segfault and glibc abort messages. Gives which hardening flags and allocator settings to deploy, how to verify posture across a fleet, and how to spot failed exploit attempts in crash telemetry. Use when hardening C or C++ builds, choosing GCC/Clang or MSVC security flags, enabling DEP/ASLR/CFG/CET or a hardened allocator, auditing exploit-protection posture, triaging repeated crashes on an internet-facing service, or hunting memory-corruption exploitation."
+    },
+    {
+      "name": "detect-toctou-races",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/detect-toctou-races/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-toctou"
+      ],
+      "description": "Detection and hardening methodology for TOCTOU (time-of-check to time-of-use) file race conditions used for local privilege escalation, where an attacker swaps a symlink, hardlink, junction, or file between a privileged process's check and its use (MITRE ATT&CK T1068, setuid case T1548.001). ATT&CK has no TOCTOU-specific technique, so detection keys off observable edges: Linux auditd SYSCALL/PATH records for symlink/link/rename, the fs.protected_* sysctls, Falco, Sysmon for Linux, osquery; Windows Sysmon FileCreate (Event ID 11) and Security object-access auditing (4663/4656). Gives the defender view of the attack, a hunt, public rule sources, and a hardening plan. Use when investigating a suspected symlink or race-condition local root, triaging a privileged process writing through a world-writable path, hunting for symlink-swap attempts in /tmp, auditing services operating on user-controllable paths, or writing TOCTOU detections."
+    },
+    {
+      "name": "triage-crashes-defensively",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/triage-crashes-defensively/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-crash-analysis"
+      ],
+      "description": "Exploitability triage of application and service crashes for defenders. A crash in software parsing untrusted input is both a prioritization problem (which memory-safety bug to hotfix first) and an exploitation signal (an access-violation spike on an internet-facing service is a possible exploit attempt), mapping to MITRE ATT&CK T1190, T1203, T1068, T1210, and DoS case T1499.004. Log sources: Windows Application log (Events 1000/1001), Microsoft-Windows-Security-Mitigations channels, Sysmon WerFault telemetry, Linux systemd-coredump and dmesg segfault lines, plus AddressSanitizer output. Gives a defender-safe severity ranking method, the signal-bearing fields, a hunt, and mitigation mapping. Use when triaging a WER Event 1000 or 1001 crash, deciding whether a fuzzer or ASAN crash is exploitable enough to hotfix, investigating a segfault or access-violation spike on a server, or prioritizing crash bugs for patching."
+    },
+    {
+      "name": "verify-exploit-mitigations",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/verify-exploit-mitigations/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-mitigations"
+      ],
+      "description": "Verification methodology to prove exploit mitigations are both PRESENT (compiled in and policy-configured) and EFFECTIVE (enforced at runtime, on every loaded module, not silently disabled). Answers the gap attackers rely on: a mitigation a baseline claims is on that is off on the live process. Covers ASLR, DEP/NX, CFG, CET shadow stack, stack canaries, and RELRO. Maps to MITRE ATT&CK T1203, T1190, T1068, T1211, T1210, mitigation M1050, and the tampering it detects (T1562.001, T1112). Signals: Windows Get-ProcessMitigation configured-vs-running delta, bcdedit nx, MitigationOptions registry, Sysmon 13, Security 4657; Linux randomize_va_space, proc maps, readelf, checksec, systemd-analyze security, auditd. Use when you need to attest ASLR DEP CFG or CET are truly enforced and not just configured, verify every loaded DLL is mitigated not just the main EXE, gate a CI build on hardening flags, or detect a mitigation turned off via IFEO."
+    },
+    {
+      "name": "detect-anti-forensics",
+      "category": "forensics",
+      "path": "Skills/forensics/detect-anti-forensics/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-anti-forensics"
+      ],
+      "description": "Detection and hunt methodology for anti-forensic indicator removal on Windows endpoints: audit-log clearing (MITRE ATT&CK T1070.001), timestomping (T1070.006), and file wiping or artifact deletion (T1070.004), under the T1070 Indicator Removal parent, with the adjacent Impair Defenses signals T1562.002 Disable Windows Event Logging. It keys off Windows Security event 1102, System event 104, Security 1100 and 4719, Sysmon event 2 (file creation time changed) and events 23 and 26 (file delete), plus process-creation and PowerShell logging. The skill gives defenders the real event IDs and fields, a forensic-grade MFT and USN hunt for timestomping, hardening that moves evidence off the host, and links to public SigmaHQ and MITRE rule sources. Use when triaging an Event ID 1102 alert, investigating a cleared Security log, hunting for timestomped files, chasing suspected log tampering or wevtutil cl / Clear-EventLog activity, or hardening log retention so a local wipe does not destroy evidence."
+    },
+    {
+      "name": "detect-c2-beaconing",
+      "category": "forensics",
+      "path": "Skills/forensics/detect-c2-beaconing/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-c2-frameworks"
+      ],
+      "description": "Detection and hunt methodology for command-and-control beaconing, where an implant calls home on a regular interval over HTTP(S), DNS, or a tunnel service, hidden inside normal egress (MITRE ATT&CK T1071 Application Layer Protocol, T1071.004 DNS, T1573 Encrypted Channel, T1571 Non-Standard Port, T1572 Protocol Tunneling, T1090 Proxy; tactic TA0011 Command and Control). Works from Zeek conn.log/ssl.log/dns.log, Suricata EVE JSON, firewall and web-proxy logs, NetFlow/IPFIX, and endpoint Sysmon Event ID 3/22. It gives the defender's view of beacon periodicity and jitter, JA3/JA3S and JA4 TLS fingerprinting, and tunnel-service detection, plus hunt steps and hardening. Use when hunting for regular callbacks, triaging a long-lived outbound connection, analyzing JA3/JA4 hashes, investigating suspected Cobalt Strike, Sliver, or Mythic C2, chasing DNS or HTTPS tunneling, or baselining egress for periodic traffic."
+    },
+    {
+      "name": "integrate-fuzzing-sdlc",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/integrate-fuzzing-sdlc/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-fuzzing",
+        "offensive-fuzzing-course"
+      ],
+      "description": "Defensive methodology for building fuzzing into your SDLC and CI so you find exploitable memory-safety and parsing bugs in your own code before an adversary fuzzes your released binaries to develop exploits (MITRE ATT&CK T1587.004, which names fuzzing, feeding T1190, T1203, and T1068). The log source is your build pipeline, not a SIEM: sanitizer reports (ASan, UBSan, MSan, TSan), libFuzzer and AFL++ crash output, OSS-Fuzz / ClusterFuzz / CIFuzz dashboards, coverage deltas, and crash stack-hash dedup in GitHub Actions or GitLab CI. Gives the signals, a CI gating approach, a corpus-triage hunt, and SDLC hardening mapped to ISO and NIST. Use when you want to add fuzzing to CI, triage a fuzzer crash, dedup and bug-bucket findings, decide whether a sanitizer report is exploitable and release-blocking, set up OSS-Fuzz or CIFuzz, or harden a library release process against bug-hunting attackers."
+    },
+    {
+      "name": "triage-vuln-classes",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/triage-vuln-classes/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-bug-identification",
+        "offensive-vuln-classes"
+      ],
+      "description": "Defensive triage methodology for classifying and prioritizing bug classes, the blue-team answer to offensive bug identification. Unremediated or mis-ranked vulnerabilities are what an adversary turns into Exploit Public-Facing Application (MITRE ATT&CK T1190) and the exploitation family (T1203, T1068, T1210, T1212, T1211), after recon and vuln sourcing (T1595.002, T1588.006). Works over your vulnerability data: scanner findings, SAST/DAST/SCA output (Semgrep, CodeQL, Trivy/Grype), and pentest reports, enriched with NVD CVSS v4.0, FIRST EPSS, the CISA KEV catalog, CWE, and CISA SSVC. Gives a classify-then-rank method that survives findings with no CVE, a hunt pivoting top classes to active-exploitation evidence, and remediation hardening mapped to ISO 27001 and NIST CSF 2.0. Use when triaging scanner or pentest findings, building a prioritization or SLA policy, deciding what to patch first, or reconciling CVSS against EPSS and KEV."
+    },
+    {
+      "name": "detect-edr-evasion",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/detect-edr-evasion/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-edr-evasion"
+      ],
+      "description": "Detection and hunting methodology for endpoint sensor tampering: AMSI patching (amsi.dll AmsiScanBuffer), ETW blinding (ntdll EtwEventWrite and provider disable), and userland API unhooking that restores a clean ntdll to defeat hooks (MITRE ATT&CK T1562.001 Disable or Modify Tools and T1562.006 Indicator Blocking, with related T1620 Reflective Code Loading and T1055 Process Injection). Keys off Windows endpoint telemetry: Sysmon Image/DLL load (EID 7), ProcessTampering (EID 25), CreateRemoteThread (EID 8), PowerShell Script Block Logging (EID 4104), Defender Operational events, and the suspicious absence of expected ETW providers. Gives a defender view of the signals, a hunt for unhooking and telemetry gaps, and tamper-resistant logging and application-control hardening. Use when triaging a suspected AMSI or ETW bypass, hunting for DLL unhooking or ntdll tampering, investigating why endpoint telemetry went quiet on a host, reviewing EDR tamper-protection alerts, or hardening a fleet against defense evasion."
+    },
+    {
+      "name": "detect-initial-access",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/detect-initial-access/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-initial-access"
+      ],
+      "description": "Detection methodology for initial access via exploitation of public-facing applications and the payload delivery that follows (MITRE ATT&CK T1190, T1133, T1105, tactic TA0001). Generalises defender lessons from two 2026 cases, the Metabase unauthenticated SQL injection (CVE-2026-72898) and the N-able N-central authentication bypasses (CVE-2026-18556, CVE-2026-18577): the attack shows up first as anomalous requests to an unauthenticated edge endpoint, then as an unexpected process or outbound connection on the host behind it. Log sources: reverse-proxy and WAF access logs, netflow and firewall egress, and host process-creation and service-install telemetry (Sysmon Event ID 1 or Windows Security 4688, System 7045). Gives the method, the signals, a hunt, and the hardening. Use when triaging a possible exploit of an internet-facing app, hunting for initial access or first-stage payload delivery, or hardening the exposed attack surface."
+    },
+    {
+      "name": "detect-keyloggers",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/detect-keyloggers/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-keylogger-arch"
+      ],
+      "description": "Detection and hunt methodology for software keyloggers and input-capture hooks across Windows, macOS, and Linux endpoints (MITRE ATT&CK T1056, T1056.001, T1056.004). Keys off the signals each capture method leaves: Sysmon image-load, injection, file, registry, and driver-load events, Security 4688 and PowerShell 4104 for SetWindowsHookEx and GetAsyncKeyState P/Invoke, macOS TCC Input Monitoring and Accessibility grants, and Linux /dev/input opens and ld.so.preload writes. Gives per-method event IDs, a cross-platform hunt, hardening that removes the hook surface, and links to SigmaHQ, ATT&CK, and D3FEND rule sources. Use when triaging a suspected keylogger, hunting for input-capture hooks, chasing SetWindowsHookEx or GetAsyncKeyState activity, investigating a new macOS Input Monitoring or Accessibility grant, or hardening endpoints against keystroke capture."
+    },
+    {
+      "name": "detect-redteam-ttps",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/detect-redteam-ttps/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-advanced-redteam"
+      ],
+      "description": "Purple-team detection coverage for a full red team or adversary-simulation engagement lifecycle, from resource development and C2 infrastructure through evasion, collection, and exfiltration. Maps the recurring operator TTPs (MITRE ATT&CK T1583, T1071, T1090.004, T1568.002, T1573, T1562.001, T1055, T1003.001, T1021, T1560, T1041) to the telemetry that catches them: Windows Security and Sysmon, EDR process and image-load events, DNS and proxy egress logs, and TLS fingerprints. Gives a tactic-by-tactic coverage method, a layered hunt, and the deconfliction and debrief workflow that turns an engagement into validated detections. Use when preparing for or debriefing a red team engagement, building ATT&CK detection coverage, running a purple team, hunting for C2 beacons or EDR tampering, or validating whether your sensors would catch an adversary simulation."
+    },
+    {
+      "name": "detect-shellcode-injection",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/detect-shellcode-injection/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-shellcode"
+      ],
+      "description": "Detection and hunting methodology for shellcode injection and in-memory execution: CreateRemoteThread injection, PE and DLL injection, process hollowing, thread execution hijacking, APC injection, and reflective code loading (MITRE ATT&CK T1055 with .001 .002 .003 .004 .012 .008 .009, T1620, T1106). Keys off Windows endpoint telemetry: Sysmon EID 8, 10, 25, 7, and 1 / Security 4688, the Microsoft-Windows-Threat-Intelligence ETW provider, Microsoft Defender for Endpoint DeviceEvents, plus Linux ptrace and memfd signals. Gives the allocate-write-execute footprint, unbacked-memory signals, a memory-forensics hunt, and exploit-protection, application-control, and EDR hardening. Use when triaging a suspected process-injection or in-memory implant, hunting for CreateRemoteThread into unbacked memory or process hollowing, investigating RWX private memory, reviewing EDR injection alerts, or hardening a fleet against fileless execution."
+    },
+    {
+      "name": "harden-windows-boundaries",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/harden-windows-boundaries/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-windows-boundaries"
+      ],
+      "description": "Defensive hardening methodology for Windows trust boundaries and access tokens: the UAC and integrity-level boundary between medium and high integrity, token theft, duplication, and impersonation, parent-PID spoofing, and Active Directory SID-History injection (MITRE ATT&CK T1134, T1134.001, T1134.002, T1134.003, T1134.004, T1134.005, T1548.002). Signals come from the Windows Security log (4688, 4672, 4673, 4674, 4624, 4648, 4703, 4765, 4766) and Sysmon (EID 1, 10, 13). Gives the events that reveal an illegitimate token or integrity transition, a hunt, rule sources, and a hardening plan for UAC, privilege rights, Credential Guard, and AD trusts. Use when hardening UAC and integrity levels, reviewing SeImpersonatePrivilege or SeDebugPrivilege holders, enabling Credential Guard or lsass PPL, configuring SID filtering on a trust, hunting token-impersonation or SID-History abuse, or closing the medium-to-high integrity gap."
+    },
+    {
+      "name": "verify-windows-mitigations",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/verify-windows-mitigations/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-windows-mitigations"
+      ],
+      "description": "Verification-and-drift methodology for confirming Windows exploit mitigations are enforced per host and per process, not merely named in policy: DEP, ASLR, CFG, CET shadow stack, SEHOP, heap integrity, ACG, Code Integrity Guard, and image-load and child-process blocking (MITRE ATT&CK T1203, T1190, T1068, T1211, T1210; mitigation M1050). Signals: Get-ProcessMitigation and NOTSET inheritance, MitigationOptions registry values, the Security-Mitigations event channels, Application log 1000 and 1001, and Defender for Endpoint DeviceEvents. Gives how to read live enforcement, find NOTSET and precedence gaps, detect baseline drift, hunt mitigations firing, and harden with a GPO or Intune baseline. Use when confirming exploit mitigations are enforced, verifying ASLR DEP CFG CET SEHOP coverage on a Windows fleet, auditing per-process mitigation state, reconciling an Exploit Protection XML baseline, or triaging a fast-fail crash cluster."
+    },
+    {
+      "name": "harden-iot",
+      "category": "iot",
+      "path": "Skills/iot/harden-iot/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-iot"
+      ],
+      "description": "Harden IoT and embedded devices against firmware tampering, hardware-interface abuse, and RTOS/ICS compromise: firmware replacement, root shells on open UART or JTAG/SWD ports, unlocked bootloader consoles, default credentials, and unauthorized commands or program downloads over Modbus, DNP3, S7comm, and MQTT (MITRE ATT&CK T1542, T1542.001, T1495, T1200, T1078.001; ICS T0857, T0839, T0812, T0843, T0855, T0848). Signals: firmware and boot telemetry (verified boot, OTA signature checks, TPM attestation), device console syslog, OT network monitoring (Zeek, Mosquitto), and Microsoft Defender for IoT alerts. Gives a hunt and a hardening plan mapped to ISO 27001, NIST CSF, and the Essential Eight. Use when hardening an IoT or embedded fleet, locking down debug ports and bootloader consoles, enforcing signed firmware and secure boot, hunting unauthorized PLC program downloads or rogue Modbus writes, or triaging Defender for IoT alerts."
+    },
+    {
+      "name": "harden-mobile-apps",
+      "category": "mobile",
+      "path": "Skills/mobile/harden-mobile-apps/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-mobile"
+      ],
+      "description": "Static and runtime hardening for Android and iOS apps running on devices an attacker controls: APK/IPA reverse engineering, rooted or jailbroken devices, Frida or Xposed hooking, repackaging, certificate pinning bypass, and secrets read from local storage (MITRE ATT&CK Mobile T1617, T1540, T1626, T1655, T1638, T1634, T1533). Signals come mostly from server-side attestation: Google Play Integrity verdicts, Apple App Attest and DeviceCheck, Android Key Attestation, Firebase App Check, RASP tamper events, and MDM/UEM compliance. Gives hardening controls (TLS pinning, Keystore/Keychain storage, obfuscation, RASP, attestation enforcement), detection, a hunt, and OWASP MASVS mapping. Use when hardening or reviewing an Android or iOS app, pinning TLS or storing secrets on a mobile client, choosing between Play Integrity, App Attest, and App Check, triaging root/jailbreak or Frida alerts, or hunting repackaged clients hitting your API."
+    },
+    {
+      "name": "detect-l2-l3-attacks",
+      "category": "network",
+      "path": "Skills/network/detect-l2-l3-attacks/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-network-attacks"
+      ],
+      "description": "Detection and response for on-path Layer 2 and Layer 3 attacks on a local network: ARP cache poisoning, LLMNR/NBT-NS poisoning with SMB/LDAP relay (Responder-style), rogue DHCP, and on-LAN DNS forgery (MITRE ATT&CK T1557, T1557.001, T1557.002, T1557.003). Signals come from switch syslog (Cisco Dynamic ARP Inspection and DHCP Snooping), Zeek dns.log and dhcp.log, arpwatch, Sysmon network and NTLM telemetry, and a canary-name tripwire. Gives the wire-level signal, log sources, a hypothesis-driven hunt, and DAI, DHCP-snooping, LLMNR-disable, and signing hardening. Use when investigating duplicate-IP or gateway-MAC flaps, triaging a DAI or DHCP-snooping violation, hunting for Responder or an on-path adversary, chasing unexplained NTLM relay logons, writing ARP/LLMNR/DNS poisoning detections, or hardening a LAN against adversary-in-the-middle."
+    },
+    {
+      "name": "detect-data-exfiltration",
+      "category": "post-exploitation",
+      "path": "Skills/post-exploitation/detect-data-exfiltration/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-data-exfiltration"
+      ],
+      "description": "Detection and response for data exfiltration over DNS and HTTPS/web channels, and for egress volume anomalies (MITRE ATT&CK T1041, T1048, T1048.003, T1071.004, T1567). Built from the October 2026 compromised-LiteLLM incident, where a stealer POSTed credentials to a lookalike domain. Ships the sigma-pack proxy rule for the known lookalike-domain exfil plus baselined hunts for DNS tunnelling and download/upload-ratio anomalies, keyed off web proxy logs, DNS telemetry (Sysmon Event ID 22, Windows DNS Server Event ID 256, Zeek dns.log), and firewall or NetFlow byte counts, with tuning, false-positive notes, and D3FEND countermeasures. Use when investigating an unexpected outbound connection or credential-stealer beacon, writing DNS or HTTPS exfiltration detections, hunting for data sent to a lookalike domain or over odd protocols, triaging an egress volume spike, or hardening egress after an AI-gateway or supply-chain compromise."
+    },
+    {
+      "name": "detect-lateral-movement",
+      "category": "post-exploitation",
+      "path": "Skills/post-exploitation/detect-lateral-movement/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-lateral-movement"
+      ],
+      "description": "Detection and hunt methodology for Windows lateral movement: remote execution over SMB/WMI/WinRM/RDP/DCOM (MITRE ATT&CK T1021, T1047, T1569.002), Pass-the-Hash and overpass-the-hash (T1550.002), lateral tool transfer (T1570), and internal tunneling or proxying (T1572, T1090.001). Names the Windows Security events (4624, 4648, 4672, 5140/5145, 7045/4697), Sysmon events, and WMI/WinRM/RDP operational logs that carry the signal, gives a hypothesis-driven hunt, and maps hardening to the Essential Eight, ISO 27001, and NIST CSF 2.0. Use when triaging an intrusion spreading host to host, hunting for PsExec/wmiexec/WinRM/DCOM remote exec, investigating NTLM network logons that look like Pass-the-Hash, chasing an internal tunnel or port-proxy, triaging 4624/4648/7045 alerts, or hardening admin paths against credential reuse."
+    },
+    {
+      "name": "detect-ncentral-post-exploitation",
+      "category": "post-exploitation",
+      "path": "Skills/post-exploitation/detect-ncentral-post-exploitation/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-persistence"
+      ],
+      "description": "Endpoint detection and hunting for post-exploitation of the August 2026 N-able N-central authentication bypasses (CVE-2026-18556, CVE-2026-18577, both in CISA KEV), for SMBs whose MSP runs the vulnerable RMM server, so operator artifacts land on your Windows endpoints. Covers masquerading svchost.exe outside System32 (MITRE ATT&CK T1036.005), a persistent Cloudflare Tunnel service that survives RMM revocation (T1543.003, T1572), and a Take Control session-log hunt. Ships two Sigma rules (Sysmon Event ID 1 or Security 4688, and System Event ID 7045), a log-review hunt, tuning and false-positive notes, and supplier-assurance questions for your MSP. Use when triaging an MSP or RMM compromise notice, hunting N-central or Take Control post-exploitation, investigating an unexpected svchost.exe or Cloudflared service, writing detections for masquerading binaries or tunnel persistence, or deciding what to ask your MSP after an RMM compromise."
+    },
+    {
+      "name": "detect-linux-privesc",
+      "category": "privesc",
+      "path": "Skills/privesc/detect-linux-privesc/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-linux-privesc"
+      ],
+      "description": "Detection and hardening methodology for Linux local privilege escalation through setuid/setgid binaries, file capabilities, and sudo abuse (MITRE ATT&CK T1548, T1548.001, T1548.003, plus T1068 for vulnerable SUID/sudo/polkit binaries such as PwnKit and Baron Samedit). Keys off auditd EXECVE/SYSCALL records, sudo logs in /var/log/auth.log, /var/log/secure, and journald, Sysmon for Linux Event ID 1, and osquery/EDR telemetry. Gives the defender view of a privesc chain, the records to watch, a hypothesis-driven hunt, links to public rule sources, and a framework-mapped hardening plan. Use when investigating a suspected local root escalation, triaging a sudo or pkexec alert, auditing SUID binaries and file capabilities, hunting for GTFOBins-style abuse, writing Linux privesc detections, or hardening sudoers and setuid surface."
+    },
+    {
+      "name": "detect-windows-privesc",
+      "category": "privesc",
+      "path": "Skills/privesc/detect-windows-privesc/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-windows-privesc"
+      ],
+      "description": "Detection and hardening methodology for Windows local privilege escalation via access-token manipulation, weak or hijackable services, and UAC bypass (MITRE ATT&CK T1134, T1134.001, T1134.002, T1134.003, T1543.003, T1574.009, T1574.010, T1574.011, T1548.002, T1068). Keys off the Windows Security log (Event IDs 4688, 4672, 4673, 4697, 4703, 4624, 4648), System log Service Control Manager events 7045 and 7040, and Sysmon (1, 6, 7, 10, 12, 13, 17, 18). Gives the defender view of a privesc chain, the events to watch, a hypothesis-driven hunt, links to public rule sources, and a framework-mapped hardening plan. Use when investigating a suspected local admin or SYSTEM escalation, triaging a fodhelper or eventvwr UAC-bypass or Potato token-impersonation alert, auditing service permissions and unquoted paths, hunting integrity-level jumps, writing Windows privesc detections, or hardening UAC, services, and local admin rights."
+    },
+    {
+      "name": "monitor-external-attack-surface",
+      "category": "recon",
+      "path": "Skills/recon/monitor-external-attack-surface/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-osint-methodology"
+      ],
+      "description": "Monitoring the internet-facing attack surface against the CISA Known Exploited Vulnerabilities (KEV) catalog, so a public advisory for a service you run becomes an alert instead of a breach (MITRE ATT&CK T1595, T1596.005, T1592, leading to T1190; MITRE D3FEND D3-AI, D3-AVE). Ships the UMBRASEC kev-watch exposure-check procedure keyed to the CISA KEV JSON feed, plus a Sigma rule for exploitation attempts in webserver, WAF, and reverse-proxy logs, with tuning, false-positive notes, and Essential Eight / ISO 27001:2022 / NIST CSF 2.0 mappings. Use when building an external attack-surface monitor, cross-referencing your stack against CISA KEV, triaging whether a new KEV CVE affects something you expose, hunting for scanning or exploitation of an internet-facing app, or asking 'what are we exposed to that is being exploited in the wild'."
+    },
+    {
+      "name": "reduce-osint-exposure",
+      "category": "recon",
+      "path": "Skills/recon/reduce-osint-exposure/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-osint"
+      ],
+      "description": "Reducing and monitoring the organization's open-source-intelligence footprint so an attacker's free reconnaissance stops feeding initial access (MITRE ATT&CK TA0043: T1589.001, T1589.002, T1589.003, T1591, T1593.001, T1593.003, T1596, T1594, T1597.002, feeding T1078, T1110.004, T1566). Signals live in GitHub org audit logs and secret-scanning alerts, Entra ID AADUserRiskEvents and SigninLogs, Okta System Log, HIBP domain breach data, and canarytoken alerts. Gives the defender's method for shrinking leaked data, exposed services, and the employee footprint, plus hunts and framework-mapped hardening. Use when reducing your OSINT attack surface, hunting for leaked credentials or secrets in public code, responding to a breach-dump exposure of employee accounts, cutting the employee social and email footprint, or asking 'what can an attacker learn about us for free'."
+    },
+    {
+      "name": "defend-social-engineering",
+      "category": "social-engineering",
+      "path": "Skills/social-engineering/defend-social-engineering/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-social-engineering"
+      ],
+      "description": "Detection, hunting, and hardening methodology for social engineering against people: help-desk impersonation and vishing to reset credentials or MFA (Scattered Spider / UNC3944, Storm-1811), pretext calls to run a remote-access tool, and BEC payment-redirect fraud (MITRE ATT&CK T1566.004, T1598.004, T1656, T1534, T1204). Signals live in help-desk ticketing, Entra ID AuditLogs and SigninLogs, the Microsoft 365 Unified Audit Log, call-detail records, badge and visitor logs, and EDR/Sysmon telemetry for Quick Assist, AnyDesk, and TeamViewer. Gives the defender view, a hunt, public rule sources, and framework-mapped awareness, physical, and process hardening. Use when investigating a suspicious help-desk MFA or password reset, triaging a vishing or fake-IT-support report, hunting a remote-access tool launched after an inbound call, responding to a suspected BEC invoice-redirect, or hardening the help desk and payment-change process."
+    },
+    {
+      "name": "detect-phishing",
+      "category": "social-engineering",
+      "path": "Skills/social-engineering/detect-phishing/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-phishing"
+      ],
+      "description": "Detection, hunting, and hardening methodology for phishing as initial and credential access: credential-harvest and attacker-in-the-middle (AiTM) link lures, malicious attachments, spearphishing via service, and OAuth consent phishing (MITRE ATT&CK T1566, T1566.001, T1566.002, T1566.003, T1598, T1528). Signals live in Defender for Office 365 advanced-hunting tables, the Exchange Online Unified Audit Log, Entra ID SigninLogs and AuditLogs, and web-proxy and DNS logs. Gives the defender view, a hunt, framework-mapped hardening, and pointers to public and sibling consent-phishing rules. Use when triaging a reported phishing email, investigating suspected AiTM session-token theft or a post-delivery inbox rule, hunting for credential-harvest URL clicks or newly registered lookalike domains, writing or reviewing email-phishing detections, or hardening a tenant against spearphishing and illicit consent grants."
+    },
+    {
+      "name": "detect-dependency-confusion",
+      "category": "supply-chain",
+      "path": "Skills/supply-chain/detect-dependency-confusion/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-dependency-confusion"
+      ],
+      "description": "Detection, hunting, and hardening methodology for dependency-confusion and namespace-takeover attacks, where an adversary publishes a public package matching an internal package name or scope so a misconfigured resolver pulls the attacker's higher version (MITRE ATT&CK T1195.002, TA0001, T1059). Works from artifact-repository logs (Artifactory, Nexus, GitHub Packages, Azure Artifacts), CI/CD logs, lock-file diffs, build-agent egress proxy/DNS, and endpoint telemetry. Covers namespace takeover and resolver-order flip across npm, PyPI, NuGet, Maven/Gradle, Go, RubyGems, and Docker, with a hunt, registry pinning, and public rule sources. Use when investigating a suspicious package install, detecting dependency confusion or namespace squatting, checking if internal package names were claimed publicly, hunting resolver-order flips in CI, triaging odd outbound callbacks from a build agent, or hardening npm/pip/NuGet/Maven/Go registry config."
+    },
+    {
+      "name": "detect-supply-chain-compromise",
+      "category": "supply-chain",
+      "path": "Skills/supply-chain/detect-supply-chain-compromise/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-supply-chain"
+      ],
+      "description": "Detection and response for supply-chain compromise: a poisoned software package or tampered build artifact that executes on install (MITRE ATT&CK T1195.002, T1546 for .pth / import-hook persistence, T1552 for credential stealers), and a trusted MSP or RMM platform turned into a delivery channel (T1199, T1543.003, T1572). Keyed off Linux file-creation telemetry (auditd, Sysmon for Linux, EDR) over site-packages, Windows System Event ID 7045, Windows process creation (Sysmon 1 / Security 4688), and package and container inventory. Ships two UMBRASEC sigma-pack rules plus a hunt, with tuning and Essential Eight / ISO 27001 / NIST CSF 2.0 mappings. Use when a dependency or Docker image you run was backdoored, triaging a PyPI, npm, or container supply-chain advisory, hunting a cook.pth import hook or dropped credential stealer, responding to an MSP or RMM compromise, or chasing an unexpected Cloudflared tunnel service."
+    },
+    {
+      "name": "defensive-fast-triage",
+      "category": "utility",
+      "path": "Skills/utility/defensive-fast-triage/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-fast-checking"
+      ],
+      "description": "Fast blue-team triage checklist for a SOC analyst working an alert queue under time pressure, the defensive answer to a speed-run recon and quick-win scan (MITRE ATT&CK T1595 Active Scanning, T1595.002 Vulnerability Scanning, T1595.003 Wordlist Scanning, T1592 Gather Victim Host Information). Shows how that activity presents in web server and WAF access logs, proxy and firewall egress, Zeek conn metadata, and SIEM tables (Microsoft Sentinel W3CIISLog, AzureDiagnostics WAF, CommonSecurityLog; Splunk web access), then gives a repeatable scope-enrich-pivot-decide workflow, the reputation and enrichment sources to pull, a hunt for the scan that turned into a hit, and escalation hardening mapped to ISO 27001:2022 and NIST CSF 2.0. Use when triaging a SOC alert fast, building an alert triage runbook or playbook, deciding true positive versus false positive, working a noisy scanner or directory-brute-force alert, or standing up a blue-team fast triage checklist."
+    },
+    {
+      "name": "defensive-reporting",
+      "category": "utility",
+      "path": "Skills/utility/defensive-reporting/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-reporting"
+      ],
+      "description": "Detection and incident reporting methodology where every claim is tied to a primary source, plus detection of anti-forensic activity that attacks that evidence: log clearing and tampering (MITRE ATT&CK T1070, T1070.001, T1070.006), disabling event logging (T1562.002), and stored-data manipulation (T1565.001). Keys off Windows Security Event IDs 1102, 4719, 1100 and System 104, Sysmon Event ID 2 and process creation, and Linux auditd/journald. Gives a report structure that survives scrutiny, an evidence-hygiene and chain-of-custody checklist, source-tracing discipline, tamper-signal detection logic, a hunt for destroyed telemetry, and hardening mapped to ISO 27001 and NIST CSF 2.0. Use when writing an incident or detection report, preparing a SOC deliverable for an auditor or regulator, building an IR report template, tracing an alert claim to its log source, or hunting for cleared or tampered logs after an intrusion."
+    },
+    {
+      "name": "defend-open-redirect",
+      "category": "web",
+      "path": "Skills/web/defend-open-redirect/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-open-redirect"
+      ],
+      "description": "Defensive methodology for open redirect (CWE-601) abuse, where a link on a trusted domain sends the victim off-site via a redirect parameter, used to cloak phishing behind your brand (MITRE ATT&CK T1566.002, T1204.001) and to steal OAuth authorization codes and tokens through an attacker-controlled redirect_uri (T1528). Keys off web server, reverse-proxy, and WAF access logs (nginx, Apache, IIS), 30x responses with an off-domain Location header, IdP sign-in logs (Entra ID, Okta), and Defender for Office 365 UrlClickEvents. Gives the defender view, signal-carrying log fields, a redirect-endpoint hunt, and allowlist and token-leak hardening. Use when hardening a redirect, returnUrl, or next parameter, reviewing OAuth redirect_uri validation, hunting phishing links cloaked by your own domain, investigating an off-site Location header, or preventing code and token leakage via Referer."
+    },
+    {
+      "name": "detect-business-logic-abuse",
+      "category": "web",
+      "path": "Skills/web/detect-business-logic-abuse/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-business-logic"
+      ],
+      "description": "Detection and hardening methodology for business logic abuse in web and API applications: workflow/state-machine bypass (skipping payment or approval steps) and pricing abuse (client-side price tampering, coupon cracking, discount stacking, refund and inventory-hold abuse). Requests are individually valid, so no payload signature fires; the skill teaches session-journey reconstruction, server-vs-client price reconciliation, and redemption-velocity baselining. Maps to MITRE ATT&CK T1190 and T1499, plus OWASP API Security Top 10 2023 API6 and OWASP Automated Threats (OAT). Log sources: application access logs (nginx/Apache, ALB/CloudFront), API gateway, WAF, and application transaction/audit logs. Use when investigating coupon or promo abuse, checkout or price manipulation, orders that skip payment, bonus or referral farming, inventory hold abuse, or building workflow-bypass and pricing-abuse detections for an e-commerce or SaaS app."
+    },
+    {
+      "name": "detect-deserialization",
+      "category": "web",
+      "path": "Skills/web/detect-deserialization/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-deserialization"
+      ],
+      "description": "Detection, hunting, and hardening for insecure deserialization and object-injection gadget chains, where a crafted serialized object sent to a public-facing app becomes remote code execution (MITRE ATT&CK T1190; follow-on T1059 and T1505.003). Keys off web server, WAF, and reverse-proxy logs carrying serialized magic bytes (Java rO0AB, PHP O:, .NET __VIEWSTATE, Python pickle, Ruby Marshal), app deserialization exceptions, ASP.NET ViewState Event ID 1316, and EDR or Sysmon Event ID 1 showing an app server spawning a shell or LOLBIN. Gives log sources and fields, a detection approach pointing to public rule sources, a hypothesis-driven hunt, hardening, and blind spots. Use when hunting insecure deserialization, triaging a suspected gadget-chain exploit, investigating a web app process that spawned cmd or /bin/sh, reviewing ViewState tampering alerts, or hardening Java, .NET, PHP, Python, or Ruby services against untrusted deserialization."
+    },
+    {
+      "name": "detect-graphql-abuse",
+      "category": "web",
+      "path": "Skills/web/detect-graphql-abuse/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-graphql"
+      ],
+      "description": "Detection and response methodology for GraphQL endpoint abuse - introspection and field-suggestion schema reconnaissance, batching and alias abuse to bypass rate limits and brute force login or OTP mutations, and depth and complexity attacks that exhaust the backend. Maps to MITRE ATT&CK T1190, with T1595, T1110, and T1499.003. Works off Apollo Server and Router logs, Hasura logs, API gateway and WAF logs with body capture, and reverse-proxy logs, keyed on the POST body, errors array, and authenticated principal rather than HTTP status, since GraphQL returns 200 on errors. Gives methods for spotting introspection probing, counting aliases per request, and baselining query cost per principal. Use when investigating suspicious GraphQL traffic, hunting introspection or schema enumeration, triaging GraphQL error spikes from one token, building batch, alias, or depth-limit detection, or hardening a GraphQL endpoint."
+    },
+    {
+      "name": "detect-hpp",
+      "category": "web",
+      "path": "Skills/web/detect-hpp/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-parameter-pollution"
+      ],
+      "description": "Detection and hardening methodology for HTTP Parameter Pollution (HPP), where an attacker sends the same parameter name more than once (for example role=user&role=admin) so the WAF, reverse proxy, and origin app each parse a different value, letting the request pass inspection on one value while the app acts on another. Maps to MITRE ATT&CK T1190 (CAPEC-460, OWASP WSTG-INPV-04). Log sources are reverse-proxy and web-server access logs (nginx, Apache, IIS), CDN and load-balancer logs, WAF logs, and the app's parsed-parameter map. Gives the defender view of duplicate parameters, how parser divergence creates the WAF-versus-origin gap, a per-endpoint detection and hunt method, and parsing hardening. Use when triaging a WAF bypass, investigating duplicate query-string or POST-body parameters, hunting for parameter pollution against a web app or API, or hardening against HPP."
+    },
+    {
+      "name": "detect-idor",
+      "category": "web",
+      "path": "Skills/web/detect-idor/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-idor"
+      ],
+      "description": "Detection and response for Insecure Direct Object References (IDOR) and broken access control in web apps: horizontal privilege escalation (reading another owner's objects), vertical escalation (a non-admin reaching admin routes), and object-ID enumeration. Maps to MITRE ATT&CK T1190, with ID sweeps resembling T1595; the flaw is CWE-639 and CWE-285, OWASP A01:2021. Works off web server and reverse-proxy access logs (nginx, Apache, IIS), WAF logs, and framework authorization-decision logs (Spring Security, ASP.NET Core, Django, Rails Pundit), keyed on principal, object ID, status, and response size. Gives a method for spotting authorization failures and enumeration plus object-level-authorization hardening. Use when investigating suspicious object access, hunting for IDOR or broken access control, triaging a burst of 403 or 404 responses from one user, spotting object-ID enumeration, or hardening an app against authorization bypass."
+    },
+    {
+      "name": "detect-litellm-command-injection",
+      "category": "web",
+      "path": "Skills/web/detect-litellm-command-injection/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-rce"
+      ],
+      "description": "Detection and response for the LiteLLM AI gateway under two linked threats: CVE-2026-42271, an authenticated command injection in the MCP stdio preview endpoints (/mcp-rest/test/connection and /mcp-rest/test/tools/list), in CISA KEV, chaining with CVE-2026-48710 (Starlette BadHost) to unauthenticated RCE; and the poisoned LiteLLM 1.107.0 supply-chain release that drops a cook.pth/cook.py credential stealer exfiltrating to litellm.dev. Maps to MITRE ATT&CK T1190, T1059, T1195.002, T1546, T1552, and T1041. Platforms: LiteLLM proxy on Linux and Windows plus web/proxy logs. Ships five Sigma rules (process, webserver, file, proxy). Use when triaging LiteLLM proxy alerts, checking for a vulnerable (below 1.83.7) or poisoned (1.107.0) LiteLLM version, hunting MCP test endpoint requests, investigating a Python proxy that spawned /bin/sh or curl, finding cook.pth or cook.py, or spotting traffic to litellm.dev."
+    },
+    {
+      "name": "detect-malicious-upload",
+      "category": "web",
+      "path": "Skills/web/detect-malicious-upload/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-file-upload"
+      ],
+      "description": "Detection, hunting, and hardening for malicious file upload, where an attacker abuses an upload feature to plant a web shell or polyglot file under a web-accessible path and then requests it for code execution. Maps to MITRE ATT&CK T1505.003, T1190, T1059, T1036.007, and T1036.008. Keys off web server access logs (IIS, Apache, Nginx), WAF and reverse-proxy multipart captures, Sysmon Event ID 11 and 1, Windows Security Event ID 4688, and EDR file-scan verdicts. Gives the defender view, log sources, content-inspection and polyglot detection logic, public rule pointers, a hypothesis-driven hunt, upload hardening, and blind spots. Use when hunting malicious file uploads, triaging a suspected web shell, investigating a web app process that spawned cmd or /bin/sh, reviewing uploads whose magic bytes disagree with their extension, hunting for polyglot or GIFAR files, or hardening an upload feature against webshell drops."
+    },
+    {
+      "name": "detect-metabase-sqli",
+      "category": "web",
+      "path": "Skills/web/detect-metabase-sqli/SKILL.md",
+      "tier": 1,
+      "answers": [
+        "offensive-sqli"
+      ],
+      "description": "Detection and response for unauthenticated SQL injection in self-hosted Metabase (CVE-2026-72898, CWE-89, CVSS 10.0) via the /api/session/reset_password endpoint, which returns administrator access to the instance and every database Metabase can query. Maps to MITRE ATT&CK T1190, T1213.006, and T1567. Web-layer detection on webserver access logs: ships one Sigma rule flagging SQL metacharacters against the reset endpoint, plus two hunts (per-source request rate and outbound-volume baselining), with tuning, false-positive notes, and Essential Eight / ISO 27001:2022 / NIST CSF 2.0 mitigations. Use when investigating a Metabase compromise or suspicious traffic to /api/session/reset_password, triaging CVE-2026-72898 or GHSA-vwf4-m7j8-wcjf, writing detections for unauthenticated SQLi against BI tooling, hunting bulk exfiltration from a BI host, or hardening internal tools holding standing database credentials."
+    },
+    {
+      "name": "detect-request-smuggling",
+      "category": "web",
+      "path": "Skills/web/detect-request-smuggling/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-request-smuggling"
+      ],
+      "description": "Detection and response for HTTP request smuggling (HTTP desync) against front-end/back-end chains: CL.TE, TE.CL, TE.TE and HTTP/2 downgrade variants H2.CL / H2.TE, where a proxy and origin disagree on request boundaries so an attacker prepends bytes to a victim's request (cache poisoning, request hijacking, control bypass). Maps to MITRE ATT&CK T1190; the flaw is CWE-444. Works off reverse-proxy and load-balancer access logs (nginx, Apache, HAProxy, AWS ALB, Cloudflare, Akamai, F5), origin web-server logs, and WAF logs, keyed on Content-Length and Transfer-Encoding headers and front-end to back-end mismatches. Gives desync detection, front-end hardening, and public rule sources. Use when investigating suspected request smuggling or desync, triaging dual Content-Length and Transfer-Encoding requests, hunting CL.TE or TE.CL signatures, explaining cache poisoning or cross-user responses, or hardening a proxy chain."
+    },
+    {
+      "name": "detect-ssrf",
+      "category": "web",
+      "path": "Skills/web/detect-ssrf/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-ssrf"
+      ],
+      "description": "Detection and response methodology for Server-Side Request Forgery (SSRF), where a public-facing application is coerced into making attacker-controlled requests, most dangerously to the cloud metadata endpoint (169.254.169.254) to steal instance-role credentials (MITRE ATT&CK T1190, T1552.005, and T1046 for internal pivoting). Covers application and WAF access logs, VPC Flow Logs and egress proxy logs, CloudTrail assumed-role credential-use anomalies, and GuardDuty InstanceCredentialExfiltration findings; gives the method for spotting metadata-endpoint access, egress anomalies, and allowlist bypasses, plus IMDSv2 and least-privilege hardening. Use when detecting or hunting SSRF, triaging a URL-fetch or webhook parameter that reached an internal address, investigating stolen EC2 instance credentials, detecting access to the cloud metadata service, or hardening a service against metadata credential theft."
+    },
+    {
+      "name": "detect-ssti",
+      "category": "web",
+      "path": "Skills/web/detect-ssti/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-ssti"
+      ],
+      "description": "Detection and response methodology for Server-Side Template Injection (SSTI), where user input is evaluated as template code by a template engine, commonly escalating to remote code execution (CWE-1336, CWE-94). Maps to MITRE ATT&CK T1190 and T1059 (.004, .001, .006) once a gadget reaches the shell. Works off web server and reverse-proxy access logs, WAF logs, application error and stack-trace logs carrying template-engine exceptions (Jinja2, Twig, FreeMarker, Thymeleaf, SpEL, Velocity), and host process-creation telemetry (auditd execve, Sysmon Event ID 1). Gives the method for catching template error and payload signatures plus engine-hardening guidance. Use when triaging 500 errors that mention a template engine, hunting for SSTI or template-injection probes, spotting {{7*7}} / ${7*7} / polyglot payloads, investigating a web app server spawning cmd.exe or sh, or hardening a templating stack against injection."
+    },
+    {
+      "name": "detect-web-race-condition",
+      "category": "web",
+      "path": "Skills/web/detect-web-race-condition/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-race-condition"
+      ],
+      "description": "Detection and hunting methodology for web application race conditions: limit-overrun, multi-endpoint, single-endpoint, and time-sensitive flaws abused with last-byte-sync (HTTP/1.1) and single-packet (HTTP/2) request bursts to redeem a coupon or gift card twice, overdraw a balance, or defeat login, OTP, and MFA rate limits (MITRE ATT&CK T1190, and T1110 when the race defeats auth throttling). Works from reverse-proxy and load-balancer access logs, WAF logs, application event logs, and database error logs. Gives the burst and duplicate-success signatures, a hypothesis-driven hunt, and application-layer hardening. Use when investigating duplicate redemptions or double-spends, triaging a burst of near-simultaneous requests to one endpoint, hunting for single-packet or last-byte-sync race attacks, explaining why an idempotent endpoint produced two successes, or hardening payment, coupon, and auth flows against concurrency abuse."
+    },
+    {
+      "name": "detect-xss",
+      "category": "web",
+      "path": "Skills/web/detect-xss/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-xss"
+      ],
+      "description": "Detection, hunting, and hardening methodology for Cross-Site Scripting (XSS), where attacker-controlled script executes in a victim's browser session on a trusted origin (CWE-79; MITRE ATT&CK T1059.007, T1189 for stored XSS served to visitors, T1539 as the usual objective). Primary signals come from Content-Security-Policy violation reports, WAF logs (OWASP CRS 941xxx, AWS WAF, Azure Application Gateway), web server access logs, and SAST findings on DOM sinks. Gives the method for catching reflected, stored, and DOM-based XSS and closing output-encoding and CSP gaps, pointing to public rule sources. Use when investigating a suspected XSS report, triaging CSP violation reports, writing or tuning XSS detections, hunting for DOM sinks or script injection in access logs, or hardening a web app with a strict CSP and output encoding."
+    },
+    {
+      "name": "detect-xxe",
+      "category": "web",
+      "path": "Skills/web/detect-xxe/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-xxe"
+      ],
+      "description": "Detection and response methodology for XML External Entity (XXE) processing and out-of-band (OOB) callback abuse against XML-parsing web applications and APIs (MITRE ATT&CK T1190, with T1048 and T1552.005 for the OOB and SSRF variants). Covers inbound XML bodies carrying document-type and entity declarations, and the higher-confidence signal of a web-tier process making a first-seen DNS or HTTP request right after parsing untrusted XML. Keyed off WAF body-inspection logs, XML parser error logs, Sysmon Event ID 22 and 3, Zeek dns.log and conn.log, and cloud VPC Flow and DNS resolver logs. Gives the method, a hypothesis-driven hunt, and parser-hardening guidance. Use when triaging a suspected XXE or XML injection, hunting for out-of-band callbacks from app servers, reviewing XXE or SSRF detections, investigating a web server making unexpected outbound DNS, or hardening XML parsers against external entity resolution."
+    },
+    {
+      "name": "harden-waf",
+      "category": "web",
+      "path": "Skills/web/harden-waf/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-waf-bypass"
+      ],
+      "description": "Defensive methodology for web application firewall evasion, where an attacker wraps an injection payload (SQLi, XSS, RCE, path traversal) in encodings the WAF misses but the backend still decodes, or abuses chunked Transfer-Encoding and duplicate length headers to desync the front-end filter from the origin (HTTP request smuggling). Maps to MITRE ATT&CK T1190 and T1027. Keys off WAF logs (AWS WAF, Azure WAF, Cloudflare, OWASP CRS / ModSecurity / Coraza, F5 ASM), CDN and reverse-proxy access logs, and backend error logs. Gives a normalization-first detection approach, a WAF-miss and desync hunt, and rule-tuning and protocol-strictness hardening. Use when hardening or tuning a WAF, closing encoding and double-encoding evasion gaps, defending against request-smuggling desync, raising OWASP CRS paranoia level, triaging requests that pass the WAF but error at the backend, or hunting for signature-evasion against a public web app."
+    },
+    {
+      "name": "detect-deauth",
+      "category": "wireless",
+      "path": "Skills/wireless/detect-deauth/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-deauth-disassoc"
+      ],
+      "description": "Detection and response methodology for 802.11 deauthentication and disassociation flooding, a wireless denial-of-service that spoofs management frames to knock clients off an AP and often precedes an evil twin or handshake capture (MITRE ATT&CK T1498, T1498.001; enabling T1557). Signals come from wireless IDS/IPS and controller telemetry: Kismet DEAUTHFLOOD / BCASTDISCON alerts, Cisco Catalyst 9800 aWIPS, Aruba/HPE WIP, Meraki Air Marshal, and raw 802.11 captures. The skill gives the frame-level signal, log sources to watch, a hunt over reason codes and source rate, and 802.11w Protected Management Frames hardening. Use when investigating repeated Wi-Fi client drops, triaging a wireless IDS deauth or disassoc alert, hunting for an evil-twin precursor, writing wireless DoS detections, or hardening WLANs with 802.11w / WPA3 PMF."
+    },
+    {
+      "name": "detect-rogue-ap",
+      "category": "wireless",
+      "path": "Skills/wireless/detect-rogue-ap/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-evil-twin"
+      ],
+      "description": "Detection and response methodology for rogue and evil-twin wireless access points, where an attacker stands up an unauthorized AP impersonating a trusted SSID (or plants one on the wired LAN) to lure clients, harvest credentials, and run an adversary-in-the-middle (MITRE ATT&CK T1557.004, T1200; enabling T1557). Signals come from controller rogue-AP classification and WIDS/WIPS (Cisco Catalyst 9800 and RLDP, Meraki Air Marshal, Aruba/HPE WIP), Kismet APSPOOF alerts, the Windows WLAN-AutoConfig Operational log (Event ID 8001), and NPS/RADIUS logs. The skill gives the SSID/BSSID allowlist signal, a hunt that diffs seen BSSIDs against an authorized-AP inventory, and 802.1X certificate validation and WIDS hardening. Use when investigating an unexpected AP broadcasting a corporate SSID, triaging a rogue-AP or Air Marshal SSID-spoof alert, hunting for an evil twin or a rogue AP on the wire, or writing rogue-AP detections."
+    },
+    {
+      "name": "detect-wifi-attacks",
+      "category": "wireless",
+      "path": "Skills/wireless/detect-wifi-attacks/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wifi"
+      ],
+      "description": "Overview detection methodology for the 802.11 attack family: evil-twin and rogue APs, deauth floods, handshake and PMKID capture for offline PSK cracking, rogue-RADIUS against WPA-Enterprise, WPS PIN brute force, and KRACK/FragAttacks (MITRE ATT&CK T1557, T1557.004, T1498.001, T1040, T1110.002, T1200). The signal lives in the radio layer and on controllers: wireless IDS/IPS (Kismet alerts), Cisco aWIPS, Aruba WIP, Meraki Air Marshal, the Windows WLAN-AutoConfig Operational channel, NPS RADIUS events, and raw 802.11 captures. This hub skill maps each attack class to its defender-side signal, a hunt, and the hardening that closes it, and points to public rule sources. Use when triaging a wireless IDS or controller alert, investigating a spoofed SSID/BSSID, hunting for an evil twin or rogue AP, deciding what Wi-Fi telemetry to collect, scoping 802.11 detection coverage, or hardening WLANs against the attack family."
+    },
+    {
+      "name": "detect-wifi-recon",
+      "category": "wireless",
+      "path": "Skills/wireless/detect-wifi-recon/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wifi-recon"
+      ],
+      "description": "Detection and response methodology for 802.11 wireless reconnaissance: wardriving and rogue scanners, hidden-SSID discovery through directed probing, and probe-request flooding used to enumerate clients and their preferred network lists (MITRE ATT&CK T1595, T1040; related T1590). The signal is radio-layer: wireless IDS/IPS and controller telemetry such as Kismet NETSTUMBLER and WELLENREITER alerts, Cisco aWIPS, Meraki Air Marshal, Aruba/HPE WIP, and raw monitor-mode captures of probe and beacon frames. The skill gives the frame-level signal, log sources, a hunt over probe volume and per-MAC fan-out, and hardening that shrinks the recon surface. Use when investigating unexplained wireless scanning, triaging a wireless IDS scanner or probe-flood alert, hunting for wardriving or evil-twin reconnaissance, writing wireless recon detections, or hardening WLANs against SSID and client enumeration."
+    },
+    {
+      "name": "harden-ble",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-ble/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-bluetooth-ble"
+      ],
+      "description": "GATT access control and pairing hardening for Bluetooth Low Energy devices that treat the radio link as the trust boundary: privileged GATT characteristics left open without authentication or encryption, Just Works pairing with no MITM protection, and LE Legacy Pairing with a recoverable key (MITRE ATT&CK T1557, T1040, T1011.001). The signal is link and attribute layer: HCI and btsnoop traces, the SMP pairing exchange, ATT error responses, BlueZ bluetoothd journald records, and Windows Bluetooth ETW channels. The skill gives the GATT permission model to enforce, the pairing settings to mandate (LE Secure Connections, 16-byte keys), defender-view signals, a hunt, and framework-mapped hardening. Use when designing or reviewing a BLE GATT server, hardening pairing on an IoT device, smart lock, or BLE gateway, triaging an unbonded peer that walked your GATT tree, or hunting for Just Works and LE Legacy Pairing downgrades."
+    },
+    {
+      "name": "harden-bluetooth-classic",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-bluetooth-classic/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-bluetooth-classic"
+      ],
+      "description": "Discovery and SDP exposure reduction for Bluetooth Classic (BR/EDR) devices left inquiry-scannable with an open Service Discovery Protocol database, letting a nearby attacker inventory the device and browse every advertised profile before pairing or a stack exploit such as BlueBorne or KNOB (MITRE ATT&CK T1046, T1011.001, T1557). The signal is link and HCI layer: HCI and btsnoop traces, SDP requests over L2CAP, BlueZ bluetoothd journald records, and Windows BthPort ETW channels plus event 6416. The skill gives the scan-state and SDP-exposure model to enforce (non-discoverable steady state, SDP profile pruning), defender-view signals, a hunt, and framework-mapped hardening. Use when designing or reviewing a Bluetooth Classic device, cutting discoverable-mode exposure across a fleet, triaging an unknown peer that browsed your service records, or hunting for BR/EDR inquiry and SDP enumeration."
+    },
+    {
+      "name": "harden-lorawan-sub-ghz",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-lorawan-sub-ghz/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-lorawan-sub-ghz"
+      ],
+      "description": "Harden the LoRaWAN join procedure and session keys against capture, replay, and injection on sub-GHz (433/868/915 MHz) IoT networks, where an attacker sniffs OTAA joins, replays Join-Requests or uplinks, abuses weak frame-counter and DevNonce handling to force session-key reuse, and injects downlinks (MITRE ATT&CK T1040, T1557; ICS T0887, T0860, T0830). Signal lives in network-server and join-server telemetry: ChirpStack, The Things Stack, AWS IoT Core for LoRaWAN, and Actility ThingPark, plus gateway RSSI/SNR metadata. Gives detectable indicators (DevNonce reuse, MIC failures, frame-counter resets, join floods), a hypothesis-driven hunt, and a join/session-key hardening plan mapped to ISO 27001 and NIST CSF. Use when hardening a LoRaWAN deployment, hunting LoRaWAN replay or join-flood activity, triaging MIC-failure or frame-counter alerts, or reviewing OTAA versus ABP key provisioning."
+    },
+    {
+      "name": "harden-wpa-enterprise",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-wpa-enterprise/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wpa-enterprise"
+      ],
+      "description": "WPA2/WPA3-Enterprise (802.1X/EAP) credential-theft defense against evil-twin APs backed by a rogue RADIUS server, which harvest the inner identity and PEAP-MSCHAPv2 or EAP-TTLS challenge/response from supplicants that skip server-certificate validation and crack it offline into domain credentials (MITRE ATT&CK T1557.004, T1110.002, T1040). Signal lives at the RF layer and on the client: WLC/WIPS rogue-AP classification, Windows WLAN-AutoConfig and OneX 802.1X failure events, wpa_supplicant certificate errors, NPS/FreeRADIUS baselines, and AD logon anomalies. Gives the supplicant certificate-validation policy, an EAP-TLS migration path, defender-view signals, a hunt, and framework-mapped hardening. Use when reviewing an 802.1X/EAP wireless deployment, choosing PEAP-MSCHAPv2 vs EAP-TLS, auditing GPO/Intune/MDM Wi-Fi profiles, hunting evil-twin or rogue-RADIUS capture, or triaging WIPS rogue-AP alerts on a corporate SSID."
+    },
+    {
+      "name": "harden-wpa2",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-wpa2/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wpa2-psk"
+      ],
+      "description": "Defend WPA/WPA2-PSK networks against four-way handshake (EAPOL) or PMKID capture and offline cracking of the pre-shared key, often preceded by a deauthentication burst that forces reconnects (MITRE ATT&CK T1040, T1110.002; deauth relates to T1498). Detection lives at the wireless layer: WLAN controller and WIDS/WIPS events (Cisco Catalyst 9800 aWIPS, Aruba RFProtect, Meraki Air Marshal), AP syslog and SNMP traps, and 802.11 management frames from a monitor-mode sensor. Gives the defender view of the capture, the log sources that carry the signal, a reconnection-storm and PMKID-harvest hunt, and hardening toward a strong unique passphrase, WPA3-SAE, and 802.11w Protected Management Frames. Use when hardening Wi-Fi against handshake capture, writing a PSK passphrase policy, hunting deauthentication floods or PMKID harvesting, triaging WIDS deauth alerts, or deciding whether to move off WPA2-Personal."
+    },
+    {
+      "name": "harden-wpa3",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-wpa3/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wpa3-sae"
+      ],
+      "description": "WPA3-SAE transition-mode and downgrade hardening for Wi-Fi. Transition mode lets an adversary stand up a WPA2-only rogue AP with the same SSID, force clients down to WPA2 with spoofed deauth frames, and capture a crackable 4-way handshake; related abuse includes SAE commit flooding and Dragonblood side channels (CVE-2019-9494, CVE-2019-9495, CVE-2019-13377, CVE-2019-13456). Maps to MITRE ATT&CK T1557, T1040, T1499.001. Signal lives at the 802.11 layer: WIDS/WIPS rogue-AP alerts, WLC syslog, hostapd logs, beacon RSN/RSNXE elements (SAE vs PSK AKM, PMF bits, Transition Disable), deauth bursts, and Windows WLAN-AutoConfig events. Gives the SAE and PMF settings to mandate, downgrade signals, a hunt, and framework-mapped hardening. Use when deploying WPA3-SAE, choosing transition mode vs separate SSIDs, hardening 6 GHz / Wi-Fi 6E, triaging evil-twin alerts, hunting clients that fell back to WPA2, or responding to SAE auth flooding."
+    },
+    {
+      "name": "harden-wps",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-wps/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-wps"
+      ],
+      "description": "Disable Wi-Fi Protected Setup (WPS) and verify access points are not exposed to online WPS PIN brute force or the offline Pixie-Dust attack, which recover the WPA/WPA2 pre-shared key and give an attacker in radio range full network access (MITRE ATT&CK T1110, T1110.001, T1110.002; CERT/CC VU#723755). Signal lives at the wireless edge: hostapd/OpenWrt WPS control-interface events (WPS-FAIL, WPS-AP-SETUP-LOCKED), router and WLAN-controller syslog, 802.11 captures of the EAP-WSC exchange, and WIPS alerts such as Kismet WPSBRUTE. Gives an on-air exposure check that reads the WPS information element from your own beacons, the disable-and-verify procedure, defender-view signals, a hunt, and framework-mapped hardening. Use when disabling WPS on an AP or fleet, checking whether WPS is still advertised, assessing Pixie-Dust or PIN brute-force exposure, triaging WPS lockout or repeated WPS-FAIL events, or hardening SOHO and branch Wi-Fi."
+    },
+    {
+      "name": "harden-z-wave",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-z-wave/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-z-wave"
+      ],
+      "description": "Harden Z-Wave home and building automation against network-key capture and RF sniffing on the sub-GHz band. An attacker sniffs device inclusion to recover the network key from legacy S0 (fixed all-zero temporary key) or forces an S2 device down to S0 via the Z-Shave downgrade (MITRE ATT&CK T1040, T1557; ICS T0887, T0860, T0830). Signal lives in controller and hub logs: Z-Wave JS driver logs, Home Assistant device security class, and SmartThings, Hubitat or Z/IP Gateway inclusion records, with Zniffer traces for RF forensics. Gives detectable indicators (S0 or insecure inclusion on S2-capable products, unexpected inclusion windows, bootstrap failures), a hypothesis-driven hunt, and an inclusion hardening plan mapped to ISO 27001 and NIST CSF. Use when hardening a Z-Wave deployment, hunting key capture or downgrade activity, triaging why a node was included at S0 or None, or reviewing SmartStart and DSK provisioning."
+    },
+    {
+      "name": "harden-zigbee-thread-matter",
+      "category": "wireless",
+      "path": "Skills/wireless/harden-zigbee-thread-matter/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-zigbee-thread-matter"
+      ],
+      "description": "Harden key management and commissioning for Zigbee, Thread, and Matter mesh networks against key capture, replay, rogue joining, and commissioner or Trust Center impersonation, including network-key capture under the default ZigBeeAlliance09 link key, insecure rejoins, touchlink abuse, and Matter setup passcode guessing (MITRE ATT&CK T1040, T1557, T1110; ICS T0887, T0860, T0830). Signals come from hub and border-router telemetry: Zigbee2MQTT, Home Assistant ZHA, deCONZ, OpenThread Border Router otbr-agent and ot-ctl, and Matter controller logs. Gives detectable join and key-management signals, a hypothesis-driven hunt, and a hardening plan mapped to ISO 27001 and NIST CSF. Use when hardening a Zigbee, Thread, or Matter deployment, hunting rogue joins or touchlink abuse, triaging unexpected device_joined or permit_join events, reviewing install-code versus global-link-key provisioning, or watching for new Matter fabrics."
+    },
+    {
+      "name": "patch-krack-fragattacks",
+      "category": "wireless",
+      "path": "Skills/wireless/patch-krack-fragattacks/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-krack-fragattacks"
+      ],
+      "description": "Patch-and-exposure verification for KRACK (WPA2 4-way-handshake key reinstallation, CVE-2017-13077 to CVE-2017-13088 excluding 13083 and 13085, VU#228519) and FragAttacks (Wi-Fi fragmentation and aggregation flaws, CVE-2020-24586/24587/24588, CVE-2020-26139 to CVE-2020-26147), where an in-range attacker decrypts, replays, and injects Wi-Fi frames (MITRE ATT&CK T1557, T1040). Covers fixed client, driver, access-point, and supplicant versions, weak host signals from Windows WLAN-AutoConfig and wpa_supplicant, Microsoft Defender Vulnerability Management fleet exposure queries, the WIDS/WIPS nonce-reuse signal as the only true detection, and patch, segmentation, and encrypted-tunnel hardening. Use when verifying laptops, phones, access points, or IoT are patched against KRACK or FragAttacks, auditing Wi-Fi firmware and driver exposure, hunting unpatchable wireless devices, or triaging a WIPS key-reinstallation or EAPOL-replay alert."
+    }
+  ],
+  "skill_count": 77,
+  "category_count": 23,
+  "tier_counts": {
+    "1": 10,
+    "2": 67
+  }
+}

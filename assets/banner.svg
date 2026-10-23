@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="umbra-blue: defensive security skills for Claude">
+  <defs>
+    <linearGradient id="field" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#05080f"/>
+      <stop offset="0.55" stop-color="#0b1120"/>
+      <stop offset="1" stop-color="#0f1e3d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.24" cy="0.52" r="0.42">
+      <stop offset="0" stop-color="#1d4ed8" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#1d4ed8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ghost" x1="0.3" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1e3a5f" stroke-width="1" opacity="0.35"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="400" fill="url(#field)"/>
+  <rect width="1280" height="400" fill="url(#grid)"/>
+  <rect width="1280" height="400" fill="url(#glow)"/>
+
+  <!-- the umbra-blue ghost, the same path as the icon, scaled -->
+  <g transform="translate(205 70) scale(8.4)">
+    <path d="M9 24 V15 a7 7 0 0 1 14 0 V24 q-1.75 2.5 -3.5 0 q-1.75 2.5 -3.5 0 q-1.75 2.5 -3.5 0 q-1.75 2.5 -3.5 0 Z" fill="url(#ghost)"/>
+    <circle cx="13.3" cy="14" r="1.45" fill="#0b1120"/>
+    <circle cx="18.7" cy="14" r="1.45" fill="#0b1120"/>
+  </g>
+
+  <text x="520" y="190" font-family="Fira Sans, DejaVu Sans, Arial, sans-serif" font-size="96" font-weight="700" fill="#e2e8f0" letter-spacing="1">umbra<tspan fill="#38bdf8">-blue</tspan></text>
+  <text x="524" y="245" font-family="Fira Sans, DejaVu Sans, Arial, sans-serif" font-size="30" fill="#94a3b8">Defensive security skills for Claude</text>
+  <text x="524" y="298" xml:space="preserve" font-family="Fira Mono, DejaVu Sans Mono, monospace" font-size="22" fill="#38bdf8">detect  ·  hunt  ·  harden</text>
+  <text x="524" y="334" font-family="Fira Mono, DejaVu Sans Mono, monospace" font-size="18" fill="#64748b">the blue counterpart to claude-red</text>
+</svg>

@@ -1,0 +1,73 @@
+---
+name: detect-edr-evasion
+description: "Detection and hunting methodology for endpoint sensor tampering: AMSI patching (amsi.dll AmsiScanBuffer), ETW blinding (ntdll EtwEventWrite and provider disable), and userland API unhooking that restores a clean ntdll to defeat hooks (MITRE ATT&CK T1562.001 Disable or Modify Tools and T1562.006 Indicator Blocking, with related T1620 Reflective Code Loading and T1055 Process Injection). Keys off Windows endpoint telemetry: Sysmon Image/DLL load (EID 7), ProcessTampering (EID 25), CreateRemoteThread (EID 8), PowerShell Script Block Logging (EID 4104), Defender Operational events, and the suspicious absence of expected ETW providers. Gives a defender view of the signals, a hunt for unhooking and telemetry gaps, and tamper-resistant logging and application-control hardening. Use when triaging a suspected AMSI or ETW bypass, hunting for DLL unhooking or ntdll tampering, investigating why endpoint telemetry went quiet on a host, reviewing EDR tamper-protection alerts, or hardening a fleet against defense evasion."
+---
+
+# AMSI, ETW Tampering and API Unhooking - Defensive Methodology
+
+> **Tier 2 - methodology skill.** No bespoke UMBRASEC detection rule ships with this skill yet. It gives the defender's method, the log sources and signals, the hunt, and the hardening, and points to public rule sources by URL. Promotion to Tier 1 (a sourced, tuned UMBRASEC rule) is tracked in [COVERAGE.md](https://github.com/umbrasec-labs/umbra-blue/blob/main/COVERAGE.md). Do not treat the content below as citing a UMBRASEC rule; there is none for this threat yet.
+
+## TL;DR for defenders
+
+Modern offensive tradecraft tries to blind the sensor before it acts. The three moves you will see most are: patching **AMSI** in process memory so script and .NET content is never scanned, patching or disabling **ETW** so the telemetry an EDR subscribes to never reaches it, and **unhooking** by overwriting the in-memory `ntdll.dll` (and sometimes `kernel32.dll`) with a clean copy read from disk or `\KnownDlls`, which strips out the userland hooks an EDR planted. All three leave a footprint, but where depends on whether the write is in-process or cross-process. A process patching its own `AmsiScanBuffer` or `EtwEventWrite` opens no handle and does not trip Sysmon; that case surfaces through EDR memory-integrity checks, the `Microsoft-Windows-Threat-Intelligence` ETW provider, and Defender's AMSI tamper detection. Sysmon sees the cross-process variant (EID 10 write-capable access plus an unbacked call trace), the image-replacement variant (EID 25 ProcessTampering), and a section-mapped full reload of `ntdll` into a running process (EID 7). Add PowerShell 4104 for the well-known bypass strings, and treat a sudden silence from a host's EDR or ETW as an alert in its own right. None of these is a single clean indicator, so layer them and baseline your fleet.
+
+## What it looks like, defender view
+
+In telemetry this presents as a process tampering with its own or another process's loaded system libraries. A self-patch of `amsi.dll` or `ntdll.dll` changes the `.text` of an image-backed region; Sysmon does not observe a process modifying its own memory, so this case shows up instead in EDR memory-integrity telemetry (modified image `.text`, RWX or freshly re-protected image-backed pages) and in the `Microsoft-Windows-Threat-Intelligence` provider's memory-protection events. When the patch is done cross-process, the actor must first open the target, which does surface. Unhooking frequently shows as `ntdll.dll` being loaded again, in full, from `C:\Windows\System32` into a process that already had it mapped, which is unusual outside loader edge cases, but only when the restore is section-mapped through the loader rather than read byte-for-byte with ReadFile. ETW blinding shows either as a code patch to `EtwEventWrite` or as the quiet disappearance of events you normally receive from a provider, for example PowerShell script block logging going dark on a host that is clearly running scripts. The defender does not need the offensive how-to; the detectable fact is tamper plus telemetry loss.
+
+## Log sources and signals
+
+- **Sysmon Event ID 7 (Image/DLL loaded).** The highest-value signal for unhooking. Fields `ImageLoaded`, `Image`, `Signed`, `SignatureStatus`, `Hashes`. A full load of `ntdll.dll` or `kernel32.dll` into an already-running non-loader process, or an unsigned or hash-mismatched copy of a core DLL, is anomalous. Requires a Sysmon config that logs image loads (they are off by default and noisy, so scope by `ImageLoaded`).
+- **Sysmon Event ID 25 (ProcessTampering).** Fires on image replacement style tampering such as process hollowing and herpaderping; a direct signal that a process image was modified after load. Field `Type` describes the tamper class.
+- **Sysmon Event ID 8 (CreateRemoteThread) and Event ID 10 (ProcessAccess).** Cross-process variants of these techniques: `GrantedAccess` values that allow write and execute (for example `0x1F3FFF`, `0x1FFFFF`, masks including `PROCESS_VM_WRITE` 0x20 and `PROCESS_VM_OPERATION` 0x8) against another process, especially targeting `amsi.dll` or `ntdll` regions. `CallTrace` ending in unbacked memory (no module) is a strong adjunct signal.
+- **PowerShell Script Block Logging, Event ID 4104** (Microsoft-Windows-PowerShell/Operational). Carries the deobfuscated script text. The classic AMSI bypass artifacts appear here: references to `System.Management.Automation.AmsiUtils`, the `amsiInitFailed` field, `[Ref].Assembly.GetType(...)`, and `VirtualProtect`/`WriteProcessMemory` P/Invoke declarations in script. Also EID 4103 (module logging, same Operational log) and EID 400/403 in the legacy Windows PowerShell log (engine started/stopped; the EngineVersion field exposes PowerShell v2 downgrade).
+- **Microsoft Defender Operational log** (Microsoft-Windows-Windows Defender/Operational): EID 5001 (real-time protection disabled), 5007 (configuration changed, including tamper and exclusion changes), 1116/1117 (threat detected/acted). Tamper Protection and attack-surface-reduction state changes land here.
+- **The absence of expected events.** ETW blinding is often visible only as a gap. Track per-host liveness of key providers: PowerShell 4104, `Microsoft-Windows-Threat-Intelligence` (the kernel sensor EDRs subscribe to), Sysmon itself (EID 255 errors, service stop via System log 7036 (service state change) or 7034 (service terminated unexpectedly), with 7045 flagging a newly installed service or driver). A host that stops reporting these while still clearly active is suspect. EDR sensor-health and tamper-alert feeds are first-class telemetry here.
+- **Registry.** Autologger and provider disable paths under `HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\...` and ETW session changes; Sysmon EID 12/13 or Security 4657 if audited.
+
+Normal baseline: core system DLLs load once, early, from `System32`, signed and hash-clean; AMSI and ETW providers report continuously on an active host; benign software rarely writes to the executable memory of `ntdll` or `amsi.dll`.
+
+## Detection approach
+
+Alert on the tamper act and on the telemetry gap, in layers. No tuned UMBRASEC rule ships for this threat yet; use maintained public rules and the signals above.
+
+- **In-memory patching of security DLLs.** Same-process patching of `amsi.dll`, `ntdll.dll`, or `clr.dll` is the behavior MITRE D3FEND **D3-PSMD Process Self-Modification Detection** describes; it maps to ATT&CK T1562.001 and is seen by EDR memory-integrity checks and the Threat-Intelligence provider, not by Sysmon. For the cross-process case, correlate Sysmon EID 10 `ProcessAccess` with write-capable `GrantedAccess` and an unbacked `CallTrace`, and treat Sysmon EID 25 `ProcessTampering` as a sibling image-replacement signal (hollowing or herpaderping), not an AMSI-patch signal.
+- **AMSI bypass in scripts.** Match PowerShell 4104 content for the known indicators listed above. SigmaHQ ships maintained rules for this; see the Windows PowerShell rule set at https://github.com/SigmaHQ/sigma/tree/master/rules/windows/powershell and process-creation rules under https://github.com/SigmaHQ/sigma/tree/master/rules/windows/process_creation. Elastic's detection rules cover AMSI and ETW tampering at https://github.com/elastic/detection-rules.
+- **ntdll unhooking.** Alert on Sysmon EID 7 loads of `ntdll.dll`/`kernel32.dll` into already-initialized processes, or loads whose `SignatureStatus` is not `Valid` or whose hash does not match the on-disk system copy. Pair with memory-region integrity checks from your EDR where available.
+- **ETW provider tampering.** Watch for disabling of logging providers via the Autologger registry keys and for abnormal termination of Sysmon, the Windows Event Log service, or the EDR sensor. MITRE publishes the technique context for indicator blocking at https://attack.mitre.org/techniques/T1562/006/.
+
+State plainly in your runbook that these are public, community-maintained analytics, not an UMBRASEC-authored rule.
+
+## Threat hunt
+
+Hypothesis: an attacker on at least one host has blinded a sensor and is operating in the quiet. Confirm or refute by looking for tamper artifacts and for telemetry that went dark.
+
+1. **ntdll re-load sweep.** Over a long window, list Sysmon EID 7 events where `ImageLoaded` ends with `\ntdll.dll` or `\kernel32.dll` and the loading `Image` is not a known loader or installer. Rank by processes that already had the module mapped at start. Investigate unsigned or hash-mismatched loads first.
+2. **Executable-region write sweep.** List EID 10 `ProcessAccess` with write-and-operation `GrantedAccess` masks where the source process is script host or a recently spawned child, and the `CallTrace` ends outside any module image. Join to EID 25 ProcessTampering on the same hosts.
+3. **Telemetry-gap sweep.** For each host, compute the last-seen time of PowerShell 4104, Sysmon events, and `Microsoft-Windows-Threat-Intelligence`. Flag hosts that were active (logons, process creation via 4688) but stopped emitting one of these. A live host that stopped scanning is the hunt's strongest lead.
+4. **Script-content sweep.** Grep 4104 history for the AMSI bypass artifacts above, then pivot on the parent process and user.
+5. **Defender-state sweep.** List Defender Operational 5001/5007 and ASR/Tamper-Protection state changes; correlate with the hosts surfaced above.
+
+## Hardening
+
+Shrink the attack surface so tampering is harder and so the evidence survives the tamper. The control mappings below use the codes in the UMBRASEC [detection and response guide](https://umbrasec.dev/guide/detection-and-response.html), the [foundation guide](https://umbrasec.dev/guide/foundation.html), and the [governance and maturity guide](https://umbrasec.dev/guide/governance-and-maturity.html); a cell is blank where no single control maps cleanly.
+
+| Control | What it does | Essential Eight | ISO 27001:2022 | NIST CSF 2.0 |
+|---|---|---|---|---|
+| Ship logs off the host to tamper-resistant central storage | A blinded local sensor still leaves a trail the attacker cannot reach and edit | ML2/ML3 event-log collection | A.8.15 Logging | DE.CM Continuous monitoring |
+| EDR with Tamper Protection enabled and sensor-health monitored | Raises the bar on disabling the agent and turns tamper or silence into an alert | - (beyond E8, detection gap) | A.8.7 Malware; A.8.16 Monitoring activities | DE.CM; DE.AE Adverse events |
+| Application control (WDAC / AppLocker), only approved code runs | Blocks the unsigned loader or tool that would do the patching from executing at all | Application control | A.8.19 Software on systems | PR.PS Platform Security |
+| PowerShell Constrained Language Mode plus Script Block and module logging | Narrows in-memory .NET abuse and preserves the deobfuscated script trail | User application hardening | A.8.7 Malware; A.8.16 Monitoring activities | PR.PS; DE.CM |
+| Run LSASS and AV as Protected Process Light (PPL) | Hardens the highest-value tamper targets against cross-process writes | - | A.8.16 Monitoring activities | PR.PS Platform Security |
+
+## Honest limitations
+
+These signals catch userland tradecraft, not everything. Direct and indirect syscalls bypass userland API hooks without ever unhooking, so there is no fresh `ntdll` load to see; the hunt leans on ETW, Threat-Intelligence sensor data, and memory scanning in that case, which is exactly the telemetry ETW blinding targets. Sysmon alone does not observe a process modifying its own memory, so same-process AMSI and ETW patches are invisible to it; that case depends on EDR memory-integrity telemetry and the Threat-Intelligence provider. Unhooking that reads `ntdll.dll` with ReadFile and copies the `.text` section manually never goes through the loader, so it fires no image-load callback and no EID 7; only a section-mapped reload trips that signal. Kernel-level evasion (vulnerable-driver / BYOVD, bootkits) can blind sensors below where these events are generated. Image-load logging is noisy and off by default, so coverage depends on a tuned Sysmon config and on central retention long enough to run the gap sweeps. Treat every hit as a lead to triage, not a verdict; baseline your own fleet before enforcing.
+
+## ATT&CK and D3FEND
+
+- MITRE ATT&CK: [T1562.001 Impair Defenses: Disable or Modify Tools](https://attack.mitre.org/techniques/T1562/001/) (AMSI patching, ETW patching, unhooking, sensor disable); [T1562.006 Impair Defenses: Indicator Blocking](https://attack.mitre.org/techniques/T1562/006/) (ETW provider disable / telemetry blocking). Related: [T1620 Reflective Code Loading](https://attack.mitre.org/techniques/T1620/) and [T1055 Process Injection](https://attack.mitre.org/techniques/T1055/).
+- MITRE D3FEND: [D3-PSMD Process Self-Modification Detection](https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection) (in-memory patching of a process's own code), [D3-SCA System Call Analysis](https://d3fend.mitre.org/technique/d3f:SystemCallAnalysis), [D3-EAL Executable Allowlisting](https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting).
+- Public rule sources: [SigmaHQ Windows rules](https://github.com/SigmaHQ/sigma/tree/master/rules/windows), [Elastic detection-rules](https://github.com/elastic/detection-rules), and [Sysmon configuration reference](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon).
+
+**Scope note.** This is a defensive skill. It explains AMSI, ETW, and unhooking tradecraft only to the depth needed to detect and mitigate it, and ships no evasion tooling, bypass code, or offensive how-to. UMBRASEC publishes defense, not offense.

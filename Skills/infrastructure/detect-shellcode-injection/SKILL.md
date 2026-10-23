@@ -1,0 +1,76 @@
+---
+name: detect-shellcode-injection
+description: "Detection and hunting methodology for shellcode injection and in-memory execution: CreateRemoteThread injection, PE and DLL injection, process hollowing, thread execution hijacking, APC injection, and reflective code loading (MITRE ATT&CK T1055 with .001 .002 .003 .004 .012 .008 .009, T1620, T1106). Keys off Windows endpoint telemetry: Sysmon EID 8, 10, 25, 7, and 1 / Security 4688, the Microsoft-Windows-Threat-Intelligence ETW provider, Microsoft Defender for Endpoint DeviceEvents, plus Linux ptrace and memfd signals. Gives the allocate-write-execute footprint, unbacked-memory signals, a memory-forensics hunt, and exploit-protection, application-control, and EDR hardening. Use when triaging a suspected process-injection or in-memory implant, hunting for CreateRemoteThread into unbacked memory or process hollowing, investigating RWX private memory, reviewing EDR injection alerts, or hardening a fleet against fileless execution."
+---
+
+# Shellcode Injection and In-Memory Execution - Defensive Methodology
+
+> **Tier 2 - methodology skill.** No bespoke UMBRASEC detection rule ships with this skill yet. It gives the defender's method, the log sources and signals, the hunt, and the hardening, and points to public rule sources by URL. Promotion to Tier 1 (a sourced, tuned UMBRASEC rule) is tracked in [COVERAGE.md](https://github.com/umbrasec-labs/umbra-blue/blob/main/COVERAGE.md). Do not treat the content below as citing a UMBRASEC rule; there is none for this threat yet.
+
+## TL;DR for defenders
+
+Shellcode injection runs attacker code inside a process that is already trusted, without writing an executable to disk. Every variant is some order of the same three primitives: allocate executable memory, write a payload into it, and execute it, either in the current process or across a process boundary. The highest-value signals are a thread whose start address sits in private memory with no backing module, a process opening a handle to another process with write-and-execute rights, and an image replaced in memory after it loaded. This is Windows-primary (CreateRemoteThread, process hollowing, reflective .NET loaders, module stomping), with a Linux tail (`ptrace` writes, `process_vm_writev`, `memfd_create` fileless exec). The hard truth up front: plain Sysmon never records the allocate or write step, only the remote thread and the handle open, so full coverage needs your EDR's kernel telemetry or the `Microsoft-Windows-Threat-Intelligence` ETW provider. Layer the signals, name a set of sacrificial processes to watch, and baseline your legitimate injectors before you enforce.
+
+## What it looks like, defender view
+
+In telemetry this presents as one process reaching into the memory of another, or rewriting its own. Classic injection shows as process A opening a handle to process B with memory-write and create-thread rights, then a new thread in B whose start address is private committed memory rather than any loaded module. Process hollowing shows as a suspended child created, its original image unmapped and replaced, then resumed, which surfaces as a ProcessTampering event. Reflective .NET loading shows as the CLR (`clr.dll`, `clrjit.dll`) appearing inside a process that is not a managed application. A common giveaway across all of them is a sacrificial host such as `rundll32.exe`, `regsvr32.exe`, `werfault.exe`, `dllhost.exe` or a spare `notepad.exe` spawned with no command line or from an unusual parent, created only to receive an implant. The defender needs none of the offensive how-to; the detectable fact is executable memory that does not come from a file, and a thread or handle that crosses into it.
+
+## Log sources and signals
+
+- **Sysmon Event ID 8 (CreateRemoteThread).** The primary cross-process signal. Fields `SourceImage`, `TargetImage`, `StartAddress`, `StartModule`, `StartFunction`. An empty `StartModule` means the thread starts in unbacked (non image-backed) memory, the shellcode tell. `StartFunction` of `LoadLibraryA`/`LoadLibraryW` is classic DLL injection; `RtlCreateUserThread`-style starts into another process are suspect.
+- **Sysmon Event ID 10 (ProcessAccess).** The handle-open that precedes a write. Field `GrantedAccess` carrying `PROCESS_VM_WRITE` (0x20), `PROCESS_VM_OPERATION` (0x8) and `PROCESS_CREATE_THREAD` (0x2) together (masks such as `0x1FFFFF`, `0x1F3FFF`, or compact `0x143A`) against another process is the pattern. `CallTrace` containing `UNKNOWN` frames (calls originating from unbacked memory) is a strong adjunct.
+- **Sysmon Event ID 25 (ProcessTampering).** Fires on image replacement such as process hollowing and herpaderping. Field `Type` names the tamper class (image replaced, image locked for access). A direct signal that a process image was changed after load.
+- **Sysmon Event ID 7 (Image/DLL loaded).** `clr.dll`/`clrjit.dll`/`mscoree.dll` loading into a host that is not a managed app points to reflective .NET execution; unsigned or hash-mismatched loads of core modules point to module stomping or injection. Image-load logging is off by default and noisy, so scope it in your Sysmon config.
+- **Sysmon Event ID 1 and Security Event ID 4688 (process creation, with command-line auditing).** Sacrificial hosts: `rundll32`, `regsvr32`, `werfault`, `dllhost`, `notepad`, or a `svchost.exe` whose parent is not `services.exe`, spawned with an empty or odd command line or an unexpected parent.
+- **Microsoft-Windows-Threat-Intelligence (ETW-TI) kernel provider.** The only telemetry that sees the allocate and write steps: remote virtual allocations, remote writes, protection changes to executable, remote section maps, remote APC queues and remote thread-context sets. State plainly in your runbook that only a Protected Process Light / ELAM-signed EDR can subscribe to this provider, so in practice it is your EDR's telemetry, not something Sysmon gives you.
+- **Microsoft Defender for Endpoint advanced hunting, `DeviceEvents` table, `ActionType` field.** Values such as `CreateRemoteThreadApiCall`, `NtAllocateVirtualMemoryRemoteApiCall`, `NtProtectVirtualMemoryApiCall`, `NtMapViewOfSectionRemoteApiCall`, `QueueUserApcRemoteApiCall` and `SetThreadContextRemoteApiCall` capture the primitives EID 8 cannot.
+- **Memory artefacts.** Private committed regions mapped RX or RWX with no backing file are the on-host ground truth. Defensive memory tooling that surfaces them: Volatility `malfind`, Hasherezade's `pe-sieve`/`hollows_hunter`, and `Moneta`.
+- **Linux.** `auditd` or an eBPF sensor on the `ptrace` (especially `PTRACE_POKETEXT`/`PTRACE_ATTACH`), `process_vm_writev`, and `memfd_create` syscalls, and `execve` of `/proc/*/fd/*` or paths under `/dev/shm` (fileless execution). These map to the Linux process-injection sub-techniques.
+
+Normal baseline: threads start inside loaded, signed modules; benign cross-process handle opens rarely combine write and create-thread rights; core system modules load once, early, from `System32`, signed and hash-clean; the CLR appears only in managed applications.
+
+## Detection approach
+
+Alert on the primitives and on their cross-process pairing, in layers. No tuned UMBRASEC rule ships for this threat yet; use maintained public rules and the signals above, and say so in your runbook.
+
+- **Remote thread into unbacked memory.** Alert on Sysmon EID 8 where `StartModule` is empty, or where `StartFunction` is `LoadLibraryA`/`LoadLibraryW`, excluding your known-good injectors. This is the behaviour MITRE D3FEND Process Code Segment Verification and Process Self-Modification Detection describe. SigmaHQ ships maintained rules at https://github.com/SigmaHQ/sigma/tree/master/rules/windows/create_remote_thread.
+- **Write-capable cross-process access.** Alert on EID 10 with `GrantedAccess` masks that combine memory-write, memory-operation and create-thread rights, or with `CallTrace` containing `UNKNOWN` frames. Maintained rules live at https://github.com/SigmaHQ/sigma/tree/master/rules/windows/process_access.
+- **Process hollowing and image tampering.** Alert on EID 25 ProcessTampering, correlated with a suspended-then-resumed child. See https://github.com/SigmaHQ/sigma/tree/master/rules/windows/process_tampering.
+- **Reflective load and sacrificial hosts.** Correlate EID 7 CLR loads into non-managed hosts (https://github.com/SigmaHQ/sigma/tree/master/rules/windows/image_load) with anomalous EID 1 / 4688 process creation (https://github.com/SigmaHQ/sigma/tree/master/rules/windows/process_creation).
+- **EDR primitive telemetry.** Where you consume ETW-TI or MDE `DeviceEvents`, alert on remote allocate, remote write and remote protect-to-executable against processes that should never be injected into. Elastic (https://github.com/elastic/detection-rules) and Splunk (https://research.splunk.com) publish maintained injection analytics. MITRE's technique context for process injection is at https://attack.mitre.org/techniques/T1055/.
+
+These are public, community-maintained analytics, not an UMBRASEC-authored rule.
+
+## Threat hunt
+
+Hypothesis: at least one process on the fleet is running code from memory that never came from a file. Confirm or refute by pairing behavioural telemetry with on-host memory inspection.
+
+1. **Unbacked-thread sweep.** Over a long window, list Sysmon EID 8 where `StartModule` is empty or absent. Rank by `TargetImage` processes that should never be injected into (browsers' broker, LSASS, Office apps) and by `SourceImage` that is a script host or a freshly spawned child. Set aside your baselined legitimate injectors.
+2. **Handle-pairing sweep.** List EID 10 with write-and-create-thread `GrantedAccess` masks, then join on host and time to the EID 8 threads above. A matched open-then-thread pair on the same source and target is a high-confidence lead.
+3. **Sacrificial-host sweep.** List EID 1 / 4688 creations of `rundll32`, `regsvr32`, `werfault`, `dllhost`, `notepad` and orphaned `svchost` with empty or odd command lines and unexpected parents. Pivot each onto its subsequent EID 8/10 activity.
+4. **Memory-ground-truth sweep.** On the hosts surfaced above, run `pe-sieve`/`hollows_hunter` or Volatility `malfind` to enumerate private committed RX/RWX regions with no backing file and to dump suspect regions for analysis. This converts a behavioural lead into an artefact.
+5. **Linux sweep.** List `auditd`/eBPF records of `ptrace` writes, `process_vm_writev`, `memfd_create`, and `execve` from `/proc/*/fd/*` or `/dev/shm`, then pivot on the acting process and parent.
+
+## Hardening
+
+Shrink the attack surface so injection is blocked, noisy, or survivable in the logs. The control mappings below use the codes in the UMBRASEC [foundation guide](https://umbrasec.dev/guide/foundation.html) and [detection and response guide](https://umbrasec.dev/guide/detection-and-response.html); a cell is blank where no single control maps cleanly.
+
+| Control | What it does | Essential Eight | ISO 27001:2022 | NIST CSF 2.0 |
+|---|---|---|---|---|
+| Exploit Protection (ACG, CFG) and ASR rules such as "Block Office applications from injecting code into other processes" | Denies the memory-protection and cross-process-write primitives outright on covered processes | User application hardening | A.8.7 Malware; A.8.19 Software on systems | PR.PS Platform Security |
+| Application control (WDAC / AppLocker), only approved code runs | Blocks the unsigned loader or tool that would perform the injection from ever executing | Application control | A.8.19 Software on systems | PR.PS Platform Security |
+| EDR everywhere with in-memory and behavioural detection | Consumes ETW-TI, scans memory, and turns the allocate-write-execute pattern into an alert | (Beyond E8 - detection gap) | A.8.7 Malware; A.8.16 Monitoring activities | DE.CM; DE.AE Adverse events |
+| Ship Sysmon and ETW-TI off the host to central storage | Preserves the injection trail where the injected process cannot reach and edit it | ML2/ML3 event-log requirements | A.8.15 Logging | DE.CM Continuous monitoring |
+| Patch operating systems and applications | Closes the exploit-driven path by which injected code gets its first foothold | Patch operating systems; Patch applications | A.8.8 Technical vulnerabilities | ID.RA; PR.PS Platform Security |
+
+## Honest limitations
+
+Plain Sysmon has no event for `VirtualAllocEx`, `WriteProcessMemory` or `NtProtectVirtualMemory`, only the remote thread (EID 8) and the handle open (EID 10), so without EDR or ETW-TI you see the thread, not the write that preceded it. Thread execution hijacking (`SetThreadContext`) and APC injection create no new remote thread, so EID 8 misses them entirely. Self-injection never crosses a process boundary, so there is no EID 8 or 10 at all. Module stomping writes shellcode into a legitimately file-backed image, defeating the unbacked-memory heuristic. Sleep masking and encrypted-at-rest payloads leave memory looking benign between beacons, defeating periodic scans. Direct and indirect syscalls bypass userland API hooks, so a hook-only EDR sees nothing. And legitimate injectors are common (debuggers, AV, accessibility tools, the .NET runtime, browser sandboxes, some installers), so EID 8/10 are noisy; baseline your fleet and allowlist the known-good before you enforce. Treat every hit as a lead to triage, not a verdict.
+
+## ATT&CK and D3FEND
+
+- MITRE ATT&CK: [T1055 Process Injection](https://attack.mitre.org/techniques/T1055/) with [.001 DLL Injection](https://attack.mitre.org/techniques/T1055/001/), [.002 PE Injection](https://attack.mitre.org/techniques/T1055/002/), [.003 Thread Execution Hijacking](https://attack.mitre.org/techniques/T1055/003/), [.004 Asynchronous Procedure Call](https://attack.mitre.org/techniques/T1055/004/), [.012 Process Hollowing](https://attack.mitre.org/techniques/T1055/012/), [.008 Ptrace System Calls](https://attack.mitre.org/techniques/T1055/008/) and [.009 Proc Memory](https://attack.mitre.org/techniques/T1055/009/). Related: [T1620 Reflective Code Loading](https://attack.mitre.org/techniques/T1620/) and [T1106 Native API](https://attack.mitre.org/techniques/T1106/).
+- MITRE D3FEND: [D3-PCSV Process Code Segment Verification](https://d3fend.mitre.org/technique/d3f:ProcessCodeSegmentVerification) (code in memory versus the on-disk image), [D3-PSMD Process Self-Modification Detection](https://d3fend.mitre.org/technique/d3f:ProcessSelf-ModificationDetection), [D3-SCA System Call Analysis](https://d3fend.mitre.org/technique/d3f:SystemCallAnalysis), and [D3-EAL Executable Allowlisting](https://d3fend.mitre.org/technique/d3f:ExecutableAllowlisting).
+- Public rule sources: [SigmaHQ Windows rules](https://github.com/SigmaHQ/sigma/tree/master/rules/windows), [Elastic detection-rules](https://github.com/elastic/detection-rules), [Splunk Security Content](https://research.splunk.com), and the [Sysmon configuration reference](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon).
+
+**Scope note.** This is a defensive skill. It explains injection and in-memory execution only to the depth needed to detect and mitigate it, and ships no shellcode, loaders, encoders, or offensive how-to. UMBRASEC publishes defense, not offense.

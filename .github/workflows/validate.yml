@@ -1,0 +1,48 @@
+name: Validate skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so an upstream sigma-pack rule change surfaces even without a commit here.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out umbra-blue
+        uses: actions/checkout@v4
+
+      - name: Check out the UMBRASEC sigma-pack
+        uses: actions/checkout@v4
+        with:
+          repository: umbrasec-labs/umbrasec.dev
+          path: _upstream
+          sparse-checkout: tools/sigma-pack
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Generated files are current
+        run: python3 tools/build_manifest.py --check
+
+      - name: Skills follow the library rules and match the sigma-pack
+        run: python3 tools/validate.py --sigma-pack _upstream/tools/sigma-pack
+
+      - name: Installer smoke test
+        run: |
+          bash -n install.sh
+          ./install.sh --target "$RUNNER_TEMP/skills"
+          test "$(find "$RUNNER_TEMP/skills" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l)" -eq "$(find Skills -name SKILL.md | wc -l)"
+          ./install.sh --target "$RUNNER_TEMP/skills" --uninstall
+          test -z "$(ls -A "$RUNNER_TEMP/skills")"

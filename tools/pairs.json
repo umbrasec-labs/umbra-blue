@@ -1,0 +1,490 @@
+{
+  "_comment": "Single source of truth for the red-to-blue pairing. One entry per claude-red skill to umbra-blue skill pair. Run python3 tools/build_manifest.py after editing; it regenerates claude-skills.json, COVERAGE.md, MINDMAP.md, and the README skill index.",
+  "upstream": {
+    "name": "claude-red",
+    "url": "https://github.com/SnailSploit/claude-red",
+    "skill_count": 78
+  },
+  "pairs": [
+    {
+      "red": "offensive-active-directory",
+      "category": "active-directory",
+      "blue": "detect-kerberoasting",
+      "focus": "RC4 service-ticket downgrade, SPN fan-out, honeypot SPN via Event 4769"
+    },
+    {
+      "red": "offensive-active-directory",
+      "category": "active-directory",
+      "blue": "detect-ad-credential-abuse",
+      "focus": "ASREProast, DCSync, ACL and delegation abuse, MDI alerts"
+    },
+    {
+      "red": "offensive-ai-security",
+      "category": "ai",
+      "blue": "defend-llm-top-10",
+      "focus": "OWASP LLM Top 10 for defenders: prompt injection, RAG poisoning, output handling"
+    },
+    {
+      "red": "offensive-ai-security",
+      "category": "ai",
+      "blue": "defend-ai-agents",
+      "focus": "Securing tool-calling agents, least-privilege tool scopes, injection containment"
+    },
+    {
+      "red": "offensive-oauth",
+      "category": "auth",
+      "blue": "detect-oauth-consent-phishing",
+      "focus": "Illicit consent grants and app-role abuse in Entra ID via KQL"
+    },
+    {
+      "red": "offensive-jwt",
+      "category": "auth",
+      "blue": "defend-jwt",
+      "focus": "Reject alg:none and key confusion, enforce validation and key rotation"
+    },
+    {
+      "red": "offensive-sqli",
+      "category": "web",
+      "blue": "detect-metabase-sqli",
+      "focus": "Unauthenticated SQLi detection from the Metabase CVE-2026-72898 case"
+    },
+    {
+      "red": "offensive-rce",
+      "category": "web",
+      "blue": "detect-litellm-command-injection",
+      "focus": "LiteLLM proxy RCE (CVE-2026-42271) detection, host and web signals"
+    },
+    {
+      "red": "offensive-xss",
+      "category": "web",
+      "blue": "detect-xss",
+      "focus": "CSP, output-encoding gaps, DOM-sink monitoring"
+    },
+    {
+      "red": "offensive-ssrf",
+      "category": "web",
+      "blue": "detect-ssrf",
+      "focus": "Metadata-endpoint access, egress anomaly, allowlist bypass"
+    },
+    {
+      "red": "offensive-ssti",
+      "category": "web",
+      "blue": "detect-ssti",
+      "focus": "Template-engine error and payload signatures"
+    },
+    {
+      "red": "offensive-xxe",
+      "category": "web",
+      "blue": "detect-xxe",
+      "focus": "External-entity and OOB callback detection"
+    },
+    {
+      "red": "offensive-idor",
+      "category": "web",
+      "blue": "detect-idor",
+      "focus": "Authorization-failure and object-enumeration signals"
+    },
+    {
+      "red": "offensive-file-upload",
+      "category": "web",
+      "blue": "detect-malicious-upload",
+      "focus": "Upload content inspection, webshell and polyglot detection"
+    },
+    {
+      "red": "offensive-deserialization",
+      "category": "web",
+      "blue": "detect-deserialization",
+      "focus": "Gadget-chain and untrusted-stream indicators"
+    },
+    {
+      "red": "offensive-race-condition",
+      "category": "web",
+      "blue": "detect-web-race-condition",
+      "focus": "Single-packet and limit-bypass anomaly detection"
+    },
+    {
+      "red": "offensive-request-smuggling",
+      "category": "web",
+      "blue": "detect-request-smuggling",
+      "focus": "CL.TE / TE.CL desync signatures and front-end hardening"
+    },
+    {
+      "red": "offensive-open-redirect",
+      "category": "web",
+      "blue": "defend-open-redirect",
+      "focus": "Redirect allowlisting, token-leak prevention"
+    },
+    {
+      "red": "offensive-parameter-pollution",
+      "category": "web",
+      "blue": "detect-hpp",
+      "focus": "Duplicate-parameter and WAF-confusion detection"
+    },
+    {
+      "red": "offensive-graphql",
+      "category": "web",
+      "blue": "detect-graphql-abuse",
+      "focus": "Introspection lockdown, batching and alias-abuse limits"
+    },
+    {
+      "red": "offensive-waf-bypass",
+      "category": "web",
+      "blue": "harden-waf",
+      "focus": "Encoding and chunked-transfer evasion coverage, rule tuning"
+    },
+    {
+      "red": "offensive-business-logic",
+      "category": "web",
+      "blue": "detect-business-logic-abuse",
+      "focus": "Workflow-bypass and pricing-abuse monitoring"
+    },
+    {
+      "red": "offensive-api-abuse",
+      "category": "api",
+      "blue": "detect-api-business-logic-abuse",
+      "focus": "BOLA/IDOR monitoring, rate and sequence anomaly"
+    },
+    {
+      "red": "offensive-api-security",
+      "category": "api",
+      "blue": "harden-api-security",
+      "focus": "AuthZ, schema validation, gateway controls across REST/gRPC/WebSocket"
+    },
+    {
+      "red": "offensive-cloud",
+      "category": "cloud",
+      "blue": "detect-cloud-attack-paths",
+      "focus": "IAM anomaly and control-plane log detection across AWS, Azure, GCP"
+    },
+    {
+      "red": "offensive-container-escape",
+      "category": "container",
+      "blue": "detect-container-escape",
+      "focus": "Runtime escape detection, seccomp and capability monitoring"
+    },
+    {
+      "red": "offensive-k8s-attacks",
+      "category": "container",
+      "blue": "harden-k8s",
+      "focus": "RBAC least privilege, admission control, audit-log detection"
+    },
+    {
+      "red": "offensive-cicd-pipeline",
+      "category": "cicd",
+      "blue": "harden-cicd-pipeline",
+      "focus": "OIDC federation, runner isolation, workflow-injection prevention"
+    },
+    {
+      "red": "offensive-cicd-secrets",
+      "category": "cicd",
+      "blue": "detect-cicd-secret-exposure",
+      "focus": "Secret scanning and rotation, pipeline leak detection"
+    },
+    {
+      "red": "offensive-supply-chain",
+      "category": "supply-chain",
+      "blue": "detect-supply-chain-compromise",
+      "focus": "Compromised-package and tampered-artifact detection, MSP RMM risk"
+    },
+    {
+      "red": "offensive-dependency-confusion",
+      "category": "supply-chain",
+      "blue": "detect-dependency-confusion",
+      "focus": "Namespace-takeover and resolver-order monitoring"
+    },
+    {
+      "red": "offensive-data-exfiltration",
+      "category": "post-exploitation",
+      "blue": "detect-data-exfiltration",
+      "focus": "DNS and HTTPS exfil detection, egress volume anomaly"
+    },
+    {
+      "red": "offensive-persistence",
+      "category": "post-exploitation",
+      "blue": "detect-ncentral-post-exploitation",
+      "focus": "Service persistence, masquerading, and tunnel detection from the N-central case"
+    },
+    {
+      "red": "offensive-lateral-movement",
+      "category": "post-exploitation",
+      "blue": "detect-lateral-movement",
+      "focus": "Remote-exec, Pass-the-Hash and tunneling signals"
+    },
+    {
+      "red": "offensive-initial-access",
+      "category": "infrastructure",
+      "blue": "detect-initial-access",
+      "focus": "Public-facing exploit and payload-delivery detection, from the Metabase and N-central cases"
+    },
+    {
+      "red": "offensive-edr-evasion",
+      "category": "infrastructure",
+      "blue": "detect-edr-evasion",
+      "focus": "AMSI and ETW tamper detection, unhooking indicators"
+    },
+    {
+      "red": "offensive-advanced-redteam",
+      "category": "infrastructure",
+      "blue": "detect-redteam-ttps",
+      "focus": "Purple-team detection coverage across the engagement lifecycle"
+    },
+    {
+      "red": "offensive-shellcode",
+      "category": "infrastructure",
+      "blue": "detect-shellcode-injection",
+      "focus": "Injection and in-memory execution detection"
+    },
+    {
+      "red": "offensive-keylogger-arch",
+      "category": "infrastructure",
+      "blue": "detect-keyloggers",
+      "focus": "Input-capture and hook-install detection"
+    },
+    {
+      "red": "offensive-windows-boundaries",
+      "category": "infrastructure",
+      "blue": "harden-windows-boundaries",
+      "focus": "Trust-boundary and token hardening"
+    },
+    {
+      "red": "offensive-windows-mitigations",
+      "category": "infrastructure",
+      "blue": "verify-windows-mitigations",
+      "focus": "Confirm exploit mitigations are enforced"
+    },
+    {
+      "red": "offensive-c2-frameworks",
+      "category": "forensics",
+      "blue": "detect-c2-beaconing",
+      "focus": "Beacon jitter, JA3, and tunnel-service detection"
+    },
+    {
+      "red": "offensive-anti-forensics",
+      "category": "forensics",
+      "blue": "detect-anti-forensics",
+      "focus": "Log-clear (1102), timestomp, and artifact-wipe detection"
+    },
+    {
+      "red": "offensive-exploit-development",
+      "category": "exploit-dev",
+      "blue": "defend-exploit-mitigations",
+      "focus": "ASLR, DEP, CFG, CET coverage and gaps"
+    },
+    {
+      "red": "offensive-basic-exploitation",
+      "category": "exploit-dev",
+      "blue": "defend-memory-corruption",
+      "focus": "Compiler and allocator hardening for memory safety"
+    },
+    {
+      "red": "offensive-crash-analysis",
+      "category": "exploit-dev",
+      "blue": "triage-crashes-defensively",
+      "focus": "Exploitability triage of crashes for defenders"
+    },
+    {
+      "red": "offensive-mitigations",
+      "category": "exploit-dev",
+      "blue": "verify-exploit-mitigations",
+      "focus": "Audit that mitigations are present and effective"
+    },
+    {
+      "red": "offensive-toctou",
+      "category": "exploit-dev",
+      "blue": "detect-toctou-races",
+      "focus": "TOCTOU and race-window hardening"
+    },
+    {
+      "red": "offensive-exploit-dev-course",
+      "category": "exploit-dev",
+      "blue": "defend-memory-corruption",
+      "focus": "Covered by the memory-corruption defense skill"
+    },
+    {
+      "red": "offensive-fuzzing",
+      "category": "fuzzing",
+      "blue": "integrate-fuzzing-sdlc",
+      "focus": "Fuzz your own code in CI, triage findings"
+    },
+    {
+      "red": "offensive-fuzzing-course",
+      "category": "fuzzing",
+      "blue": "integrate-fuzzing-sdlc",
+      "focus": "Covered by the SDLC fuzzing skill"
+    },
+    {
+      "red": "offensive-bug-identification",
+      "category": "fuzzing",
+      "blue": "triage-vuln-classes",
+      "focus": "Classify and prioritize discovered bug classes"
+    },
+    {
+      "red": "offensive-vuln-classes",
+      "category": "fuzzing",
+      "blue": "triage-vuln-classes",
+      "focus": "Defender-side taxonomy and remediation mapping"
+    },
+    {
+      "red": "offensive-linux-privesc",
+      "category": "privesc",
+      "blue": "detect-linux-privesc",
+      "focus": "SUID, capability, and sudo-abuse detection and hardening"
+    },
+    {
+      "red": "offensive-windows-privesc",
+      "category": "privesc",
+      "blue": "detect-windows-privesc",
+      "focus": "Token, service, and UAC-bypass detection and hardening"
+    },
+    {
+      "red": "offensive-network-attacks",
+      "category": "network",
+      "blue": "detect-l2-l3-attacks",
+      "focus": "ARP, LLMNR, and DNS poisoning detection, DHCP snooping"
+    },
+    {
+      "red": "offensive-osint-methodology",
+      "category": "recon",
+      "blue": "monitor-external-attack-surface",
+      "focus": "KEV exposure checks and external-surface monitoring"
+    },
+    {
+      "red": "offensive-osint",
+      "category": "recon",
+      "blue": "reduce-osint-exposure",
+      "focus": "Shrink leaked data, exposed services, and employee footprint"
+    },
+    {
+      "red": "offensive-phishing",
+      "category": "social-engineering",
+      "blue": "detect-phishing",
+      "focus": "Consent-phishing detection from the OAuth writeup; email-phishing controls next"
+    },
+    {
+      "red": "offensive-social-engineering",
+      "category": "social-engineering",
+      "blue": "defend-social-engineering",
+      "focus": "Awareness, vishing and physical controls, process hardening"
+    },
+    {
+      "red": "offensive-mobile",
+      "category": "mobile",
+      "blue": "harden-mobile-apps",
+      "focus": "Static and runtime hardening for Android and iOS apps"
+    },
+    {
+      "red": "offensive-iot",
+      "category": "iot",
+      "blue": "harden-iot",
+      "focus": "Firmware, hardware-interface, and RTOS/ICS hardening"
+    },
+    {
+      "red": "offensive-crypto-attacks",
+      "category": "crypto",
+      "blue": "harden-crypto-implementations",
+      "focus": "Fix padding, nonce reuse, and weak-primitive misuse"
+    },
+    {
+      "red": "offensive-tls-attacks",
+      "category": "crypto",
+      "blue": "harden-tls",
+      "focus": "Cipher and protocol hardening, config scanning"
+    },
+    {
+      "red": "offensive-wifi",
+      "category": "wireless",
+      "blue": "detect-wifi-attacks",
+      "focus": "802.11 attack detection overview"
+    },
+    {
+      "red": "offensive-wifi-recon",
+      "category": "wireless",
+      "blue": "detect-wifi-recon",
+      "focus": "Rogue-scan and probe-flood detection"
+    },
+    {
+      "red": "offensive-deauth-disassoc",
+      "category": "wireless",
+      "blue": "detect-deauth",
+      "focus": "Deauth/disassoc flood detection, 802.11w"
+    },
+    {
+      "red": "offensive-evil-twin",
+      "category": "wireless",
+      "blue": "detect-rogue-ap",
+      "focus": "Rogue and evil-twin AP detection"
+    },
+    {
+      "red": "offensive-wpa2-psk",
+      "category": "wireless",
+      "blue": "harden-wpa2",
+      "focus": "PSK handshake-capture resistance, strong passphrase policy"
+    },
+    {
+      "red": "offensive-wpa3-sae",
+      "category": "wireless",
+      "blue": "harden-wpa3",
+      "focus": "SAE transition-mode and downgrade hardening"
+    },
+    {
+      "red": "offensive-wpa-enterprise",
+      "category": "wireless",
+      "blue": "harden-wpa-enterprise",
+      "focus": "802.1X/EAP server-cert validation, anti-rogue-RADIUS"
+    },
+    {
+      "red": "offensive-wps",
+      "category": "wireless",
+      "blue": "harden-wps",
+      "focus": "Disable WPS, Pixie-Dust exposure checks"
+    },
+    {
+      "red": "offensive-krack-fragattacks",
+      "category": "wireless",
+      "blue": "patch-krack-fragattacks",
+      "focus": "KRACK and FragAttacks patch and exposure verification"
+    },
+    {
+      "red": "offensive-bluetooth-ble",
+      "category": "wireless",
+      "blue": "harden-ble",
+      "focus": "GATT access control, pairing hardening"
+    },
+    {
+      "red": "offensive-bluetooth-classic",
+      "category": "wireless",
+      "blue": "harden-bluetooth-classic",
+      "focus": "Discovery and SDP exposure reduction"
+    },
+    {
+      "red": "offensive-zigbee-thread-matter",
+      "category": "wireless",
+      "blue": "harden-zigbee-thread-matter",
+      "focus": "Mesh-protocol key management and monitoring"
+    },
+    {
+      "red": "offensive-z-wave",
+      "category": "wireless",
+      "blue": "harden-z-wave",
+      "focus": "S0/S2 key and sniffing exposure hardening"
+    },
+    {
+      "red": "offensive-lorawan-sub-ghz",
+      "category": "wireless",
+      "blue": "harden-lorawan-sub-ghz",
+      "focus": "Join-procedure and session-key hardening"
+    },
+    {
+      "red": "offensive-fast-checking",
+      "category": "utility",
+      "blue": "defensive-fast-triage",
+      "focus": "Fast blue-team triage checklist, from the Blue Team Mapper"
+    },
+    {
+      "red": "offensive-reporting",
+      "category": "utility",
+      "blue": "defensive-reporting",
+      "focus": "Detection and incident reporting, every claim tied to a source"
+    }
+  ]
+}

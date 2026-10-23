@@ -1,0 +1,88 @@
+---
+name: detect-keyloggers
+description: "Detection and hunt methodology for software keyloggers and input-capture hooks across Windows, macOS, and Linux endpoints (MITRE ATT&CK T1056, T1056.001, T1056.004). Keys off the signals each capture method leaves: Sysmon image-load, injection, file, registry, and driver-load events, Security 4688 and PowerShell 4104 for SetWindowsHookEx and GetAsyncKeyState P/Invoke, macOS TCC Input Monitoring and Accessibility grants, and Linux /dev/input opens and ld.so.preload writes. Gives per-method event IDs, a cross-platform hunt, hardening that removes the hook surface, and links to SigmaHQ, ATT&CK, and D3FEND rule sources. Use when triaging a suspected keylogger, hunting for input-capture hooks, chasing SetWindowsHookEx or GetAsyncKeyState activity, investigating a new macOS Input Monitoring or Accessibility grant, or hardening endpoints against keystroke capture."
+---
+
+# Keyloggers and Input-Capture Hooks - Defensive Methodology
+
+> **Tier 2 - methodology skill.** No bespoke UMBRASEC detection rule ships with this skill yet. It gives the defender's method, the log sources and signals, and the hardening, and points to public rule sources. Promotion to Tier 1 (a sourced, tuned UMBRASEC rule) is tracked in [COVERAGE.md](https://github.com/umbrasec-labs/umbra-blue/blob/main/COVERAGE.md). Do not treat the content below as citing a UMBRASEC rule; there is none for this threat yet.
+
+## TL;DR for defenders
+
+A keylogger captures keystrokes by one of a few mechanisms, and each mechanism leaves a different trace, so there is no single event to watch. On Windows the loud case is a **global message hook** (`SetWindowsHookEx` with `WH_KEYBOARD` or `WH_GETMESSAGE`): the hook DLL is mapped into every interactive process, so the same unsigned DLL fans out across many processes in **Sysmon Event ID 7**. The quiet cases leave no injection artifact at all: a low-level hook (`WH_KEYBOARD_LL`), `GetAsyncKeyState` polling, and Raw Input (`RegisterRawInputDevices` with `RIDEV_INPUTSINK`) all run in the collector's own process, so for those the real signal is **EDR API telemetry** and **PowerShell 4104** P/Invoke text, plus the **Sysmon 11 FileCreate** of a keystroke log that grows in a temp or AppData path. On macOS the gold signal is a **TCC grant**: a keylogger needs Input Monitoring (`kTCCServiceListenEvent`) or Accessibility (`kTCCServiceAccessibility`), both recorded in `TCC.db`. On Linux watch opens of `/dev/input/event*` and writes to `/etc/ld.so.preload`. Keystroke capture runs happily in user mode without admin, so treat these as collection-stage leads and pair detection with phishing-resistant MFA so captured passwords cannot be replayed.
+
+## What it looks like, defender view
+
+On Windows, one unsigned or oddly located DLL suddenly loaded into Explorer, the browser, Office, and a dozen other interactive processes at once, often right after a new process started. A short burst of PowerShell that calls `Add-Type` with `DllImport("user32.dll")` and `SetWindowsHookEx`, `GetAsyncKeyState`, or `GetKeyboardState`. A file in `%TEMP%`, `%APPDATA%`, or `%PROGRAMDATA%` that grows steadily during a logon session and is named like `log.txt`, `keys.dat`, or a random string. A new kernel driver service in System 7045 with no vendor you recognise. On macOS, a brand-new Input Monitoring or Accessibility entry for an app the user does not remember granting, or a background LaunchAgent that requests it. On Linux, a process holding `/dev/input/event0` open that is not the display server, or an unexpected line in `/etc/ld.so.preload`. None of these is benign by default on a managed endpoint, but several have legitimate owners (see Honest limitations), so each is a lead to triage, not an automatic verdict.
+
+## Log sources and signals
+
+**Windows.** No single capture method covers all keyloggers; map the signal to the method.
+
+- **Sysmon Event ID 7 (Image / DLL loaded).** Fields `Image`, `ImageLoaded`, `Signed`, `SignatureStatus`, `Hashes`. The fan-out signal for a **global, non-low-level hook** (`WH_KEYBOARD`, `WH_GETMESSAGE`): the OS maps the hook DLL into every process with a message queue, so the same unsigned `ImageLoaded` appears across many unrelated `Image` processes in a short window. This signal does **not** fire for `WH_KEYBOARD_LL`, `GetAsyncKeyState` polling, or Raw Input, which inject nothing. Sysmon 7 is extremely noisy without a tight include-list config.
+- **Sysmon Event ID 8 (CreateRemoteThread)** and **Event ID 10 (ProcessAccess).** Classic injection used to load a capture DLL into another process. On 10, inspect `GrantedAccess` for masks such as `0x1F3FFF`, `0x1438`, or `PROCESS_VM_WRITE | PROCESS_CREATE_THREAD`, and `CallTrace` entries marked `UNKNOWN`, meaning a frame came from memory not backed by any module on disk.
+- **Sysmon Event ID 11 (FileCreate)** and **Event ID 23/26 (FileDelete).** The keystroke log itself: a file that is created and then grows in `%TEMP%`, `%APPDATA%`, or `%PROGRAMDATA%` during a session, often flushed or deleted on exfiltration.
+- **Sysmon Event ID 12/13 (Registry) and Security 4657.** Persistence for the keylogger: `Run`/`RunOnce` keys, `AppInit_DLLs`, or a hook helper registered to autostart.
+- **Sysmon Event ID 6 (DriverLoad), System Event ID 7045 (new service/driver), and Code Integrity Event IDs 3033/3077.** A **kernel-mode** keyboard-filter driver. 3033 (image failed Code Integrity) and 3077 are strong signals when an unsigned or revoked driver is blocked or loaded. Pair with the HVCI / blocklist posture.
+- **Security 4688 (process creation, with command-line auditing)** or **Sysmon Event ID 1.** The process that installs the hook, its command line and parent.
+- **PowerShell Event ID 4104 (script-block logging).** Script-based keyloggers are common and visible here: look for `DllImport("user32.dll")`, `SetWindowsHookEx`, `GetAsyncKeyState`, `GetKeyboardState`, `MapVirtualKey`, `GetForegroundWindow`, and `[System.Windows.Forms]` key-state calls. This is the best signal for polling and low-level hooks, which leave no image-load trace.
+
+**macOS.** TCC is the authoritative signal because modern keystroke capture requires an explicit grant.
+
+- **TCC database.** On macOS 10.15 and later, `CGEventTapCreate`, `IOHIDManager`, and `NSEvent` global monitors need Input Monitoring (`kTCCServiceListenEvent`) or, to post or observe broadly, Accessibility (`kTCCServiceAccessibility`); synthetic input posting is `kTCCServicePostEvent`. Entries live in the system `TCC.db` under `/Library/Application Support/com.apple.TCC/` and the per-user one under `~/Library/Application Support/com.apple.TCC/`. A new grant for an unexpected bundle id is the lead.
+- **Unified log.** Predicate on subsystem `com.apple.TCC` for the prompt and grant events; `log show`/`log stream`. Endpoint Security Framework (ES) process-exec and file events from your EDR carry the installing process and any new LaunchAgent/LaunchDaemon plist in `~/Library/LaunchAgents` or `/Library/LaunchDaemons`.
+
+**Linux.** Capture paths are few and each is watchable.
+
+- **auditd.** A watch on the input devices, `-w /dev/input -p r -k input_capture`, catches a process opening `/dev/input/event*` to read raw key events. Membership of the `input` group (via `/etc/group`) is the precondition for that read without root. Add syscall rules for `ptrace` if you also care about memory-scraping variants, governed by the Yama `ptrace_scope` sysctl.
+- **ld.so.preload hooking.** A watch `-w /etc/ld.so.preload -p wa` and detection of `LD_PRELOAD` in process `environ` catch a shared object hooking `read`/`XNextEvent` to tap input library-side.
+- **X11 is effectively unauditable:** under X11 any client can read every other client's keystrokes (`XQueryKeymap`, the XInput/record extensions) with no privileged syscall and no log. Wayland isolates per-client input and closes this. Treat an X11 session as an open input bus.
+
+What normal looks like: input method editors, accessibility and assistive tools, text-expansion and clipboard utilities, password-manager auto-type, remote-control and meeting apps with global hotkeys, and game overlays all legitimately install hooks or hold input grants. Baseline those owners first so the anomaly is legible.
+
+## Detection approach
+
+Alert and triage by method rather than hoping one rule catches all keyloggers. Treat a **Sysmon 7 image-load fan-out** of one unsigned DLL across many interactive processes as a high-interest lead, after an allowlist of your known hook-holding software (IMEs, accessibility, overlays). Alert on **PowerShell 4104** script blocks that P/Invoke the `user32` input APIs above; this is the most reliable signal for the polling and low-level hooks that leave no DLL. Correlate **Sysmon 11** file growth in temp/AppData with the process that opened the hook. For kernel keyloggers, alert on **System 7045 / Sysmon 6 / Code Integrity 3033/3077** for unsigned or unknown drivers. On macOS alert on any new **TCC Input Monitoring or Accessibility grant** and reconcile it to a known app; on Linux alert on **auditd** hits for `/dev/input` reads by a non-display-server process and on `/etc/ld.so.preload` writes. A tuned UMBRASEC rule is not yet shipped for this threat, so lean on maintained public rules:
+
+- **SigmaHQ** (github.com/SigmaHQ/sigma): `rules/windows/powershell/powershell_script` for the P/Invoke patterns, `rules/windows/image_load` for hook-DLL loads, `rules/windows/create_remote_thread` and `rules/windows/process_access` for injection, `rules/windows/registry` for persistence, `rules/windows/driver_load` for kernel drivers, `rules/linux/auditd` for `/dev/input` and preload, and `rules/macos/process_creation` for the macOS side.
+- **MITRE ATT&CK** data sources named on the T1056.001 page are the detection backbone: DS0009 OS API Execution (the Windows hook/key-state calls), DS0022 File Creation (the keystroke log), DS0027 Driver Load (kernel keyloggers), and DS0024 Windows Registry Key Modification (persistence).
+- **Elastic detection-rules** (github.com/elastic/detection-rules) and **Splunk Security Content** (research.splunk.com) both ship maintained input-capture and credential-API-hooking analytics; match by technique id T1056.
+
+## Threat hunt
+
+Hypothesis: a user-mode keylogger is running on a given host and capturing to a local file before exfiltration. This is a procedure, not a rule.
+
+1. **Windows, hook fan-out.** Over a 7 to 30 day window, group **Sysmon 7** by `ImageLoaded` hash and count distinct `Image` processes that loaded it. Rank DLLs loaded into many unrelated interactive processes; drop signed modules from vendors you expect and your IME/accessibility allowlist. What remains is your hook-DLL shortlist.
+2. **Windows, scripted and polling capture.** Search **4104** for the `user32` input APIs (`SetWindowsHookEx`, `GetAsyncKeyState`, `GetKeyboardState`, `GetForegroundWindow`) and **4688/Sysmon 1** for interpreters started by unusual parents. These catch the low-level and polling keyloggers that step 1 cannot see.
+3. **The log file.** For each suspect process, pull **Sysmon 11** file creates in `%TEMP%`, `%APPDATA%`, `%PROGRAMDATA%`, and the user profile, and look for a handle held open and growing across the session. Correlate `GetForegroundWindow` usage (window-title logging) with the same process.
+4. **Kernel and persistence.** Check **7045 / Sysmon 6** for unknown drivers and **Code Integrity 3033/3077** for blocked images; check **Sysmon 12/13** for `Run`, `AppInit_DLLs`, and hook autostart.
+5. **macOS.** Dump both `TCC.db` files, list every `kTCCServiceListenEvent` and `kTCCServiceAccessibility` grant, and reconcile each bundle id to an installed, expected app. Any grant you cannot attribute is the finding; pivot to the installing process via ES exec logs and LaunchAgent plists.
+6. **Linux.** List processes with `/dev/input/event*` open (`lsof`, or the auditd `input_capture` key) and exclude the display server and input stack. Read `/etc/ld.so.preload` and check `LD_PRELOAD` in each suspect's `environ`. Note whether the session is X11 (input is readable by any client and the absence of evidence proves nothing) or Wayland.
+
+## Hardening
+
+Remove the hook surface and make captured secrets worthless. Mappings follow the control codes in the UMBRASEC [detection and response](https://umbrasec.dev/guide/detection-and-response.html) and [identity and access](https://umbrasec.dev/guide/identity-and-access.html) guides; a cell is blank where no single control maps cleanly.
+
+| Control | What it does | Essential Eight | ISO 27001:2022 | NIST CSF 2.0 |
+|---|---|---|---|---|
+| Application control with DLL rules (WDAC / AppLocker) | Only approved executables and DLLs run, so an unsigned hook DLL cannot load and a script interpreter is constrained | Application control; User application hardening | A.8.19 Software on systems | PR.PS |
+| EDR plus Sysmon API and image-load telemetry | Produces the Event 7 / 8 / 10 / 11 and API-call signals the detections need, and the macOS ES and Linux auditd equivalents | - | A.8.7 Malware; A.8.16 Monitoring activities | DE.CM |
+| Forward logs off-host in near real time | A keylogger that deletes its local log and traces cannot remove the forwarded copy on the collector | ML2/ML3 event-log requirements | A.8.15 Logging | DE.CM |
+| Phishing-resistant MFA (FIDO2 / WebAuthn) | A captured password cannot be replayed, because the authenticator never types a secret the keylogger can see | Multi-factor authentication (ML2+) | A.8.5 Secure authentication | PR.AA-03 |
+| Restrict administrative privileges | Blocks the kernel-driver and system-wide persistence paths, though it does not stop same-integrity user-mode hooks | Restrict administrative privileges (ML2+) | A.8.2 Privileged access rights | PR.AA-05 |
+
+Platform controls worth naming beyond the table: on Windows, UAC elevation prompts and the `Ctrl+Alt+Del` sign-in run on the **secure desktop**, which a normal user-desktop hook cannot observe, and **User Interface Privilege Isolation (UIPI)** stops a lower-integrity process from installing a message hook on a higher-integrity window, so run sensitive work (and credential entry) at an integrity level the keylogger cannot reach. On macOS, an MDM **Privacy Preferences Policy Control (PPPC)** profile can *deny* Input Monitoring (ListenEvent can only be denied or left for the user to approve, never silently granted) and can pre-approve or deny Accessibility per app, so also audit deployed PPPC profiles for unexpected Accessibility allows, shrinking who can tap input. On Linux, remove ordinary users from the `input` group, prefer **Wayland** over X11, and keep `kernel.yama.ptrace_scope` restrictive.
+
+## Honest limitations
+
+The quiet capture methods leave no injection artifact: `WH_KEYBOARD_LL`, `GetAsyncKeyState` polling, and Raw Input (`RIDEV_INPUTSINK`) all run in the collector's own process, so the Sysmon 7 fan-out never fires for them and you are relying on API telemetry, script-block text, or the log file instead. Kernel-mode, hypervisor, firmware, and hardware (inline USB or BadUSB) keyloggers sit below user-mode telemetry and will not appear in Sysmon or ESF at all; Code Integrity and firmware attestation are the only partial answers. Browser form-grabbers and malicious extensions capture typed credentials without ever installing an OS hook, so they are outside this technique and need web and extension controls. Restricting admin does not stop a same-integrity user-mode hook, which needs no elevation. Sysmon Event 7 is unusable as an alert without a carefully maintained include-list, and legitimate hook holders (IMEs, accessibility and assistive tech, text expanders, password-manager auto-type, remote-control and meeting apps, game overlays) form a real false-positive baseline you must allowlist first. Under X11 the absence of a `/dev/input` open proves nothing, because any client reads the keyboard with no privileged call. State what the evidence shows and what it cannot; the detection advises, the defender decides whether capture is live.
+
+## ATT&CK and D3FEND
+
+- MITRE ATT&CK: [T1056 Input Capture](https://attack.mitre.org/techniques/T1056/), [T1056.001 Keylogging](https://attack.mitre.org/techniques/T1056/001/), [T1056.004 Credential API Hooking](https://attack.mitre.org/techniques/T1056/004/) (the hook-install case). T1056.001 is both Collection and Credential Access.
+- ATT&CK detection data sources: DS0009 OS API Execution, DS0022 File Creation, DS0027 Driver Load, DS0024 Windows Registry Key Modification.
+- ATT&CK mitigations: M1029 Remote Data Storage (forward logs off the host) and M1038 Execution Prevention (application control). There is no patch-style mitigation, because input capture abuses intended OS input APIs.
+- MITRE D3FEND: the per-technique countermeasure list is at [d3fend.mitre.org/offensive-technique/attack/T1056.001](https://d3fend.mitre.org/offensive-technique/attack/T1056.001/); the relevant defensive classes are operating-system and system-call analysis of the input APIs and file-access monitoring of the keystroke log. Specific D3-xxx identifiers are not asserted here because they were not verified against the live knowledge graph.
+- Public rule sources: SigmaHQ (github.com/SigmaHQ/sigma), Elastic detection-rules, Splunk Security Content.
+
+**Scope note.** This is a defensive skill. It explains input capture and hook installation only to the depth needed to detect, hunt, and mitigate keyloggers, names APIs and paths only so a defender can recognise them in telemetry, and ships no keylogging, hooking, or capture tooling.

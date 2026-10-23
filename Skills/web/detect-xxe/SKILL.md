@@ -1,0 +1,61 @@
+---
+name: detect-xxe
+description: "Detection and response methodology for XML External Entity (XXE) processing and out-of-band (OOB) callback abuse against XML-parsing web applications and APIs (MITRE ATT&CK T1190, with T1048 and T1552.005 for the OOB and SSRF variants). Covers inbound XML bodies carrying document-type and entity declarations, and the higher-confidence signal of a web-tier process making a first-seen DNS or HTTP request right after parsing untrusted XML. Keyed off WAF body-inspection logs, XML parser error logs, Sysmon Event ID 22 and 3, Zeek dns.log and conn.log, and cloud VPC Flow and DNS resolver logs. Gives the method, a hypothesis-driven hunt, and parser-hardening guidance. Use when triaging a suspected XXE or XML injection, hunting for out-of-band callbacks from app servers, reviewing XXE or SSRF detections, investigating a web server making unexpected outbound DNS, or hardening XML parsers against external entity resolution."
+---
+
+# XML External Entity (XXE) - Defensive Methodology
+
+> **Tier 2 - methodology skill.** No bespoke UMBRASEC detection rule ships with this skill yet. It gives the defender's method, the log sources and signals, and the hardening, and points to public rule sources. Promotion to Tier 1 (a sourced, tuned UMBRASEC rule) is tracked in [COVERAGE.md](https://github.com/umbrasec-labs/umbra-blue/blob/main/COVERAGE.md). Do not treat the content below as citing a UMBRASEC rule; there is none for this threat yet.
+
+## TL;DR for defenders
+
+XXE abuses an XML parser that resolves external entities, letting an attacker read local files, reach internal services, hit the cloud metadata endpoint, or exfiltrate data over an attacker-controlled channel. Watch two things. First, inbound: XML request bodies that carry a document-type declaration and, more tellingly, an external entity declaration referencing a `SYSTEM` or `PUBLIC` identifier or a dangerous URI scheme (`file:`, `php:`, `expect:`, `jar:`, `netdoc:`). Second, and higher confidence, outbound: a web-tier process (`w3wp.exe`, `java`, `php-fpm`, `httpd`, `nginx`, `dotnet`) making a DNS or HTTP request to a first-seen external domain within seconds of parsing untrusted XML, or any web-tier reach to `169.254.169.254`. The real fix is to disable DTD and external entity resolution in every XML parser; detection buys time while you get there.
+
+## What it looks like, defender view
+
+To a defender, blind XXE shows up as a request-then-callback pattern: the application receives XML on an endpoint that accepts it (SOAP, SAML, XML-RPC, SVG upload, a DOCX or other OOXML office document, a REST body with an XML content type), and the server then initiates its own outbound connection to a domain or IP it has no business contacting. In-band XXE instead surfaces as unexpected file contents or internal responses echoed back in the HTTP response, which rarely reaches your logs, and as a burst of XML parser rejection errors when a hardened parser refuses the document. Error-based probing produces repeated parser exceptions in application logs. The OOB callback is the most reliable half, because a well-behaved web application server almost never makes arbitrary outbound DNS or HTTP requests of its own accord.
+
+## Log sources and signals
+
+- **WAF / API gateway with body inspection.** Standard web access logs (IIS W3C, Apache/Nginx combined) do **not** record POST bodies, so the inbound entity tokens are invisible there. The declaration tokens are only visible where the request body is captured: a WAF audit log (ModSecurity audit log, AWS WAF / Cloudflare request logging), an API gateway, or deliberate app-layer request logging. Look in the body for `<!DOCTYPE`, the rarer and more meaningful `<!ENTITY` with a `SYSTEM` or `PUBLIC` reference, and the dangerous schemes above.
+- **Application and XML parser logs.** A hardened parser rejects the document and logs a specific error: Java Xerces reports the `disallow-doctype-decl` feature violation, and .NET raises an `XmlException` stating that DTD processing is prohibited. Bursts of parser rejection errors of this form across an endpoint indicate active probing, and are a signal even when you cannot see the request body.
+- **Endpoint DNS and network telemetry.** Sysmon Event ID 22 (DnsQuery; key fields `QueryName`, `Image`) and Event ID 3 (network connection; `Image`, `DestinationIp`, `DestinationHostname`) on the app server. On Linux, Zeek `dns.log` and `conn.log`, or auditd network/connect records. The discriminating pattern is a web-tier `Image` resolving or connecting to a first-seen external `QueryName` or `DestinationHostname`.
+- **Network and cloud egress.** Firewall and proxy egress logs, AWS VPC Flow Logs plus Route 53 Resolver query logs (or the GCP/Azure equivalents). Flag any web-tier process reaching `169.254.169.254` (the instance metadata endpoint) from host telemetry such as Sysmon Event ID 3 or auditd connect records, since AWS VPC Flow Logs do not record instance metadata traffic, and watch the EC2 `MetadataNoToken` CloudWatch metric for calls made without an IMDSv2 session token, and long or high-entropy DNS subdomain labels from the app tier, which indicate data staged into DNS queries for exfiltration.
+
+## Detection approach
+
+Alert on the correlation, not either half alone. The strongest rule joins an inbound XML request to a web endpoint with a near-simultaneous outbound DNS or HTTP request from that same host and process to a never-before-seen external domain, within a few seconds, from a web-tier image. Treat any web-tier connection to `169.254.169.254` as high severity in its own right. In parallel, inspect request bodies at the WAF for the entity-declaration and dangerous-scheme tokens named above, accounting for the fact that the XML may be nested (an SVG image, an OOXML document's internal XML parts, a SOAP envelope, a SAML response), and watch application logs for spikes of DTD-prohibited parser errors as a body-independent probing signal.
+
+A tuned UMBRASEC rule is not yet shipped for this threat. Build or adapt from maintained public sources: the SigmaHQ web and application rule directories at [github.com/SigmaHQ/sigma/tree/master/rules/web](https://github.com/SigmaHQ/sigma/tree/master/rules/web), the OWASP Core Rule Set at [github.com/coreruleset/coreruleset](https://github.com/coreruleset/coreruleset) for inbound XML attack patterns at a ModSecurity-compatible WAF, and the MITRE D3FEND countermeasures linked below. The outbound first-seen-domain correlation is best expressed in your own SIEM against the DNS and connection sources above, since it depends on your environment's egress baseline.
+
+## Threat hunt
+
+Hypothesis: an attacker is submitting XML with external entities to an endpoint that parses it, to read files, reach internal or metadata services, or trigger an out-of-band callback.
+
+1. Enumerate the endpoints that accept XML or XML-bearing formats: SOAP and XML-RPC services, SAML assertion consumer endpoints, SVG and OOXML (DOCX, XLSX) upload handlers, and any REST route that accepts an XML content type.
+2. In WAF audit, API gateway, or app-layer request logs, search those endpoints' request bodies for `<!ENTITY` with `SYSTEM` or `PUBLIC`, and for the `file:`, `php:`, `expect:`, `jar:`, and `netdoc:` schemes. Treat `<!DOCTYPE` alone as weak on its own.
+3. Pull outbound DNS (Sysmon 22, Zeek `dns.log`, Route 53 Resolver logs) and network connections (Sysmon 3, Zeek `conn.log`, VPC Flow Logs) where `Image` or the source is a web-tier process over the same window. Flag first-seen external `QueryName` values and any hit on `169.254.169.254`.
+4. Join steps 2 and 3 on host and time. An inbound XML request followed within seconds by an outbound request from the same web process to a new domain is strong evidence of blind XXE.
+5. For the body-blind case, rank endpoints by parser-rejection error volume and by rare, long, high-entropy DNS labels leaving the app tier (candidate DNS exfiltration), and investigate the top talkers directly.
+
+## Hardening
+
+The decisive control is parser configuration, which is not represented cleanly by a single framework code and so stays in prose. Disable DTD processing and external entity (and parameter entity) resolution in every XML parser: in Java set the Xerces `disallow-doctype-decl` feature to true and disable external general and parameter entities; in .NET set `DtdProcessing` to `Prohibit` and leave `XmlResolver` null; in Python use `defusedxml` in place of the standard library parsers; in PHP rely on libxml 2.9 or later, which disables external entity loading by default, and do not re-enable it. Follow the OWASP XML External Entity Prevention Cheat Sheet for the per-language settings. Egress-filter the application tier so that even a successful parse cannot complete an out-of-band callback, and require IMDSv2 so a web-tier SSRF cannot read the metadata endpoint without a token; these also resist detection evasion but have no single clean framework mapping, so they too stay in prose. The three rows below are grounded in the UMBRASEC guide.
+
+| Control | Essential Eight | ISO 27001:2022 | NIST CSF 2.0 |
+|---|---|---|---|
+| Keep XML parser libraries and application frameworks patched, so secure external-entity defaults apply | Patch applications | A.8.8 Technical vulnerabilities | PR.PS Platform Security |
+| Centralise WAF, application, and egress logs so request bodies and outbound callbacks are both captured | ML2/ML3 event-log requirements | A.8.15 Logging | DE.CM Continuous monitoring |
+| Run high-signal alerting on web-tier out-of-band callbacks and metadata-endpoint access | - | A.8.16 Monitoring activities | DE.AE; DE.CM |
+
+## Honest limitations
+
+The biggest blind spot is inbound: without a WAF or app-layer log that captures request bodies, the entity tokens never reach you, because standard access logs omit POST bodies. In-band file-read XXE that returns data in the HTTP response and makes no outbound call leaves no network signal at all, so it rests entirely on body inspection and parser errors. An egress-filtered environment defeats OOB callbacks but pushes the attacker toward in-band or error-based variants that your network rules will miss. Legitimate XML carries false positives: SVG and XHTML routinely include a `<!DOCTYPE ... PUBLIC` declaration, and some SOAP and SAML tooling does too, so `<!DOCTYPE` alone over-alerts and the external `<!ENTITY ... SYSTEM` declaration is the far rarer, higher-value token. Base64 or alternate charset encoding, parameter entities, and nesting inside archive formats like DOCX can slip past naive token matching, and low-and-slow DNS exfiltration blends into normal resolver noise. Baseline your own egress before enforcing, and layer the inbound and outbound halves rather than trusting either alone.
+
+## ATT&CK and D3FEND
+
+- MITRE ATT&CK: [T1190 Exploit Public-Facing Application](https://attack.mitre.org/techniques/T1190/) (Initial Access); [T1048 Exfiltration Over Alternative Protocol](https://attack.mitre.org/techniques/T1048/) for the out-of-band data egress; [T1552.005 Unsecured Credentials: Cloud Instance Metadata API](https://attack.mitre.org/techniques/T1552/005/) for the XXE-driven SSRF to the metadata endpoint.
+- MITRE D3FEND: [D3-ACH Application Configuration Hardening](https://d3fend.mitre.org/technique/d3f:ApplicationConfigurationHardening/) (disable DTD and external entity resolution); [D3-OTF Outbound Traffic Filtering](https://d3fend.mitre.org/technique/d3f:OutboundTrafficFiltering/) (egress control defeats OOB callbacks); [D3-ITF Inbound Traffic Filtering](https://d3fend.mitre.org/technique/d3f:InboundTrafficFiltering/) (WAF body inspection).
+- Public rule sources: [SigmaHQ web rules](https://github.com/SigmaHQ/sigma/tree/master/rules/web), [OWASP Core Rule Set](https://github.com/coreruleset/coreruleset), and the [OWASP XML External Entity Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html).
+
+**Scope note.** This is a defensive skill. It explains XXE only to the depth needed to detect and mitigate it, names no payloads, and deliberately ships no XXE tooling or exploit instructions. UMBRASEC publishes defense, not offense.
