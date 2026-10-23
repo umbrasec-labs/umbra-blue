@@ -99,6 +99,7 @@ references:
     - https://umbrasec.dev/research/detecting-kerberoasting.html
 author: UMBRASEC
 date: 2026-06-10
+modified: 2026-10-23
 tags:
     - attack.credential-access
     - attack.t1558.003
@@ -112,6 +113,9 @@ correlation:
     condition:
         gte: 15
         field: ServiceName
+falsepositives:
+    - Vulnerability scanners and monitoring accounts that request tickets for many services in a burst - allowlist them
+    - Busy legitimate accounts above the default threshold - run it report-only first and set gte above your noisiest legitimate account
 ---
 title: Kerberoasting 4769 base
 id: 2d0e5c88-3f66-4012-cc4b-7e9f0a1b2c33
