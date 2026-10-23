@@ -17,11 +17,18 @@ import json
 import re
 import sys
 from collections import defaultdict
+from urllib.parse import quote
 
 from _common import ROOT, iter_skills, load_pairs, parse_frontmatter, tier_of
 
 VERSION = "0.1.0"
 HOMEPAGE = "https://github.com/umbrasec-labs/umbra-blue"
+# The Blue Team Mapper serves one stable page per skill at <MAPPER>/skills/<name>.
+MAPPER = "https://umbrasec-labs.github.io/BlueTeamMapper"
+
+
+def mapper_url(name: str) -> str:
+    return f"{MAPPER}/skills/{quote(name)}"
 
 # Same folder names and order as claude-red, with a defensive title and focus.
 CATEGORIES = [
@@ -73,6 +80,7 @@ def collect():
             "answers": [p["red"] for p in by_blue.get(name, [])],
             "focus": by_blue[name][0]["focus"] if by_blue.get(name) else "",
             "description": fm.get("description", ""),
+            "mapper": mapper_url(fm.get("name", name)),
         })
     return pairs, skills
 
@@ -88,7 +96,7 @@ def build_manifest(skills) -> str:
         "homepage": HOMEPAGE,
         "upstream": "https://github.com/SnailSploit/claude-red",
         "categories": {c: cats[c] for c, _, _ in CATEGORIES if c in cats},
-        "skills": [{k: s[k] for k in ("name", "category", "path", "tier", "answers", "description")} for s in skills],
+        "skills": [{k: s[k] for k in ("name", "category", "path", "tier", "answers", "description", "mapper")} for s in skills],
         "skill_count": len(skills),
         "category_count": len(cats),
         "tier_counts": {"1": sum(s["tier"] == 1 for s in skills), "2": sum(s["tier"] == 2 for s in skills)},
@@ -119,6 +127,11 @@ def build_coverage(pairs, skills) -> str:
         "",
         "A Tier 2 skill is promoted to Tier 1 when its UMBRASEC writeup and tuned rule land.",
         "",
+        f"The Mapper column opens each skill's page in the [Blue Team Mapper]({MAPPER}/). "
+        "It shows the skill's ATT&CK techniques and any UMBRASEC rules for them. "
+        "Where those techniques are in the mapper matrix, it also shows the matrix rows, "
+        "the response flow chains they lead to, and your own coverage rating.",
+        "",
     ]
     by_cat = defaultdict(list)
     for p in pairs["pairs"]:
@@ -126,10 +139,13 @@ def build_coverage(pairs, skills) -> str:
     for c, title, _ in CATEGORIES:
         if c not in by_cat:
             continue
-        out += [f"## {title}", "", "| claude-red | umbra-blue | Defensive focus | Tier |", "|---|---|---|---|"]
+        out += [f"## {title}", "", "| claude-red | umbra-blue | Defensive focus | Tier | Mapper |", "|---|---|---|---|---|"]
         for p in by_cat[c]:
             s = sk[p["blue"]]
-            out.append(f"| [`{p['red']}`]({UPSTREAM}/{p['category']}/{p['red']}/SKILL.md) | [`{s['name']}`]({s['path']}) | {p['focus']} | {s['tier']} |")
+            out.append(
+                f"| [`{p['red']}`]({UPSTREAM}/{p['category']}/{p['red']}/SKILL.md) | [`{s['name']}`]({s['path']}) "
+                f"| {p['focus']} | {s['tier']} | [map]({s['mapper']}) |"
+            )
         out.append("")
     return "\n".join(out)
 
@@ -187,10 +203,10 @@ def build_readme(readme: str, skills) -> str:
     for c, title, _ in CATEGORIES:
         if c not in cats:
             continue
-        index += [f"### {title}", "", f"`Skills/{c}/`", "", "| Skill | Tier | Answers claude-red | Defensive focus |", "|---|:-:|---|---|"]
+        index += [f"### {title}", "", f"`Skills/{c}/`", "", "| Skill | Tier | Answers claude-red | Defensive focus | Mapper |", "|---|:-:|---|---|:-:|"]
         for s in sorted(cats[c], key=lambda x: (x["tier"], x["name"])):
             ans = ", ".join(f"`{a}`" for a in s["answers"]) or "-"
-            index.append(f"| [`{s['name']}`]({s['path']}) | {s['tier']} | {ans} | {s['focus']} |")
+            index.append(f"| [`{s['name']}`]({s['path']}) | {s['tier']} | {ans} | {s['focus']} | [map]({s['mapper']}) |")
         index.append("")
     readme = replace_block(readme, "badges", badges)
     readme = replace_block(readme, "categories", "\n".join(table))

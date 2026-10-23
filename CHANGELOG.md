@@ -4,6 +4,10 @@ All notable changes to `umbra-blue` are documented here. Versions follow [Semant
 
 ## [Unreleased]
 
+### Added
+
+- **Blue Team Mapper links.** Every skill now links to its page in the [Blue Team Mapper](https://umbrasec-labs.github.io/BlueTeamMapper/), which shows the skill's techniques and any UMBRASEC rules for them. For techniques in the mapper matrix, the page also shows the matrix rows, the response flow chains, and the reader's own coverage. The link appears in a new Mapper column in the README skill index and in `COVERAGE.md`, and as a `mapper` URL field on each skill in `claude-skills.json`. `tools/build_manifest.py` generates all three from one base URL.
+
 ### Planned
 
 - Promote Tier 2 skills to Tier 1 as UMBRASEC writeups and sigma-pack rules land
