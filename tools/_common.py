@@ -19,6 +19,8 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     """Parse the simple `key: value` frontmatter used by every skill.
 
     Values may be double-quoted. Uses PyYAML when available for full fidelity.
+    Returns {} for frontmatter that is missing or does not parse to a mapping,
+    and "" for a key with no value.
     """
     m = FRONTMATTER_RE.match(text)
     if not m:
@@ -27,8 +29,13 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     try:
         import yaml  # type: ignore
 
-        data = yaml.safe_load(block)
-        return {str(k): str(v) for k, v in (data or {}).items()}
+        try:
+            data = yaml.safe_load(block)
+        except yaml.YAMLError:
+            return {}
+        if not isinstance(data, dict):
+            return {}
+        return {str(k): "" if v is None else str(v) for k, v in data.items()}
     except ImportError:
         pass
     out: dict[str, str] = {}
@@ -60,6 +67,14 @@ def load_pairs() -> dict:
 def normalize(text: str) -> str:
     """Normalize for byte-identity comparison: strip trailing whitespace per line and outer blank lines."""
     return "\n".join(line.rstrip() for line in text.strip("\n").splitlines())
+
+
+RULE_GLOBS = ("*.yml", "*.yaml", "*.kql")
+
+
+def rule_files(sigma_pack: Path) -> list[Path]:
+    """Every rule file in a sigma-pack checkout, in a stable order. Skills name a rule by file name."""
+    return sorted(p for pattern in RULE_GLOBS for p in sigma_pack.rglob(pattern))
 
 
 def canonical_blocks(text: str):

@@ -13,7 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from _common import RULE_BLOCK_RE, ROOT, CANONICAL_MARK, iter_skills
+from _common import RULE_BLOCK_RE, ROOT, CANONICAL_MARK, iter_skills, rule_files
 
 import re
 
@@ -22,7 +22,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--sigma-pack", type=Path, required=True)
     args = ap.parse_args()
-    files = {f.name: f for f in list(args.sigma_pack.rglob("*.yml")) + list(args.sigma_pack.rglob("*.kql"))}
+    files: dict[str, Path] = {}
+    for f in rule_files(args.sigma_pack):
+        if f.name in files:
+            print(f"error: {f.name} appears more than once in {args.sigma_pack}; skills could not tell the copies apart", file=sys.stderr)
+            return 2
+        files[f.name] = f
     if not files:
         print(f"error: no rules found under {args.sigma_pack}", file=sys.stderr)
         return 2

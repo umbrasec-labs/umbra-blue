@@ -71,7 +71,7 @@ cd umbra-blue
 ./install.sh --uninstall              # remove every umbra-blue skill
 ```
 
-The installer never overwrites a skill it did not install unless you pass `--force`. Start a new session and Claude loads a matching skill from its triggers: mentioning Kerberoasting or RC4 service tickets loads `detect-kerberoasting`.
+The installer never overwrites a skill it did not install unless you pass `--force`. To update, `git pull` and run it again: it refreshes the umbra-blue skills and removes any that were renamed or dropped since your last install. Start a new session and Claude loads a matching skill from its triggers: mentioning Kerberoasting or RC4 service tickets loads `detect-kerberoasting`.
 
 ### Claude.ai
 
