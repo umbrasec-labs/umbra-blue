@@ -167,7 +167,7 @@ For the low-and-slow or not-yet-signatured case the rules miss, hunt rather than
 
 ## Mitigation
 
-Detection buys time; these shrink the attack surface. Mappings follow the exact control language used in the UMBRASEC SMB guide; a cell is `-` where nothing maps cleanly. D3FEND countermeasures are listed where one applies.
+Detection buys time; these shrink the attack surface. Mappings follow the exact control language used in the UMBRASEC security guide; a cell is `-` where nothing maps cleanly. D3FEND countermeasures are listed where one applies.
 
 | Control | What it does | Essential Eight | ISO 27001:2022 | NIST CSF 2.0 | D3FEND |
 |---|---|---|---|---|---|
