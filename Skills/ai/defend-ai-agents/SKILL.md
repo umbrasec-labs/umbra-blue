@@ -23,7 +23,7 @@ The dangerous property is in the loop's last step, where each tool result is rea
 
 ## The agent threat surface
 
-The failure modes worth putting in an SMB or mid-market threat model, mapped to the standards where they live:
+The failure modes worth putting in most threat models today, mapped to the standards where they live:
 
 | Threat | What it looks like in an agent | Maps to |
 |---|---|---|

@@ -400,7 +400,7 @@ Contributions and corrections are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md
 
 ## Acknowledgements
 
-- **Author:** [UMBRASEC](https://umbrasec.dev), an independent defensive security practice.
+- **Author:** [UMBRASEC](https://umbrasec.dev), an independent defensive security project.
 - **Public rule sources** referenced by Tier 2 skills: [SigmaHQ](https://github.com/SigmaHQ/sigma), [MITRE ATT&CK](https://attack.mitre.org/), and [MITRE D3FEND](https://d3fend.mitre.org/).
 
 ---
