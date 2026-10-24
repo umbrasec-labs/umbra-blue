@@ -39,6 +39,9 @@ jobs:
       - name: Skills follow the library rules and match the sigma-pack
         run: python3 tools/validate.py --sigma-pack _upstream/tools/sigma-pack
 
+      - name: Installer and validator regression tests
+        run: python3 -m unittest discover -s tools -p 'test_*.py' -v
+
       - name: Installer smoke test
         run: |
           bash -n install.sh

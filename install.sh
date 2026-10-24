@@ -5,7 +5,9 @@
 # Claude Code loads skills from <skills-dir>/<skill-name>/SKILL.md, one level
 # deep, so this script flattens Skills/<category>/<skill>/ into
 # <target>/<skill>/. Each installed skill gets a .umbra-blue marker so that
-# updates and uninstall only ever touch umbra-blue's own folders.
+# updates and uninstall only ever touch umbra-blue's own folders. An install
+# also removes skills it installed that are no longer in this checkout of
+# umbra-blue (the marker names the skill, so a renamed copy is never removed).
 #
 # Usage:
 #   ./install.sh                         # all skills into ~/.claude/skills
@@ -34,7 +36,7 @@ UNINSTALL=0
 LIST_ONLY=0
 
 usage() {
-  sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
@@ -46,16 +48,25 @@ list_categories() {
   done
 }
 
+# An option that takes a value must get one, not nothing and not the next option.
+# A folder whose name starts with a dash can still be given as ./-name.
+need_value() {
+  if [ $# -lt 2 ] || [ -z "$2" ] || [ "${2#-}" != "$2" ]; then
+    echo "Error: $1 needs a value" >&2
+    usage 1 >&2
+  fi
+}
+
 skill_tier() {
   if head -c 3000 "$1" | grep -qF "$TIER2_MARK"; then echo 2; else echo 1; fi
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --target)    TARGET="$2"; shift 2 ;;
+    --target)    need_value "$@"; TARGET="$2"; shift 2 ;;
     --project)   TARGET="$PWD/.claude/skills"; shift ;;
-    --category)  CATEGORIES+=("$2"); shift 2 ;;
-    --tier)      TIER="$2"; shift 2 ;;
+    --category)  need_value "$@"; CATEGORIES+=("$2"); shift 2 ;;
+    --tier)      need_value "$@"; TIER="$2"; shift 2 ;;
     --force)     FORCE=1; shift ;;
     --dry-run)   DRY_RUN=1; shift ;;
     --uninstall) UNINSTALL=1; shift ;;
@@ -108,11 +119,32 @@ for c in "${CATEGORIES[@]}"; do
       [ -e "$dest" ] && { rm -rf -- "$dest"; updated=$((updated + 1)); } || installed=$((installed + 1))
       mkdir -p "$dest"
       cp -R "$skill_dir/." "$dest/"
-      echo "$c" > "$dest/$MARKER"
+      echo "$c/$name" > "$dest/$MARKER"
     fi
   done
 done
 
+# Skills that were removed or renamed in umbra-blue, whatever the --category or --tier
+# filter. Only a folder whose marker names that same folder is removed: a copy the user
+# made under another name, or a marker from an older installer (category only), is kept.
+removed=0
+for marker in "$TARGET"/*/"$MARKER"; do
+  [ -f "$marker" ] || continue
+  dir="$(dirname "$marker")"
+  name="$(basename "$dir")"
+  case "$(head -n 1 "$marker")" in */"$name") ;; *) continue ;; esac
+  found=0
+  for d in "$SKILLS_DIR"/*/"$name"/; do [ -f "$d/SKILL.md" ] && { found=1; break; }; done
+  [ "$found" -eq 1 ] && continue
+  if [ "$DRY_RUN" -eq 1 ]; then
+    echo "[dry-run] would remove $name (no longer in umbra-blue)"
+  else
+    rm -rf -- "$dir"
+    echo "remove $name (no longer in umbra-blue)"
+  fi
+  removed=$((removed + 1))
+done
+
 if [ "$DRY_RUN" -eq 1 ]; then exit 0; fi
 echo
-echo "Installed $installed, updated $updated, skipped $skipped. Claude Code picks them up in new sessions."
+echo "Installed $installed, updated $updated, removed $removed, skipped $skipped. Claude Code picks them up in new sessions."
