@@ -23,7 +23,7 @@
 
 ## Overview
 
-`umbra-blue` is a library of defensive security skills for the [Claude Skills system](https://code.claude.com/docs/en/skills). It is the blue team counterpart to [claude-red](https://github.com/SnailSploit/claude-red): every one of claude-red's offensive skills is paired with the defensive skill that answers it, in the same category folder. Where claude-red teaches Claude how a technique is executed, umbra-blue teaches Claude how to see it, hunt it, and shut it down.
+`umbra-blue` is a library of defensive security skills for the [Claude Skills system](https://code.claude.com/docs/en/skills). It is the blue team counterpart to [claude-red](https://github.com/SnailSploit/claude-red): 78 of claude-red's 79 offensive skills are paired with the defensive skill that answers them, in the same category folder. The one gap, `offensive-netexec`, needs a new skill and is listed in [COVERAGE.md](COVERAGE.md). Where claude-red teaches Claude how a technique is executed, umbra-blue teaches Claude how to see it, hunt it, and shut it down.
 
 Each skill is a structured `SKILL.md` that primes Claude with detection, hunting, and hardening methodology for one threat: the log sources and event IDs that carry the signal, what to alert on, how to tune out false positives, how to hunt for the quiet variant, and which controls shrink the attack surface, mapped to MITRE ATT&CK and D3FEND. Skills load on demand from their description triggers, so you only pay context for the skill you need.
 
@@ -85,7 +85,7 @@ Paste the contents of a `SKILL.md` into a system prompt or project instructions.
 
 ## Two tiers
 
-umbra-blue mirrors all of claude-red, so it ships in two clearly labeled tiers. The tier is visible at the top of every skill before you trust it.
+umbra-blue mirrors nearly all of claude-red (78 of its 79 skills), so it ships in two clearly labeled tiers. The tier is visible at the top of every skill before you trust it.
 
 | Tier | What you get |
 |---|---|
@@ -380,8 +380,8 @@ Tier 1 skills are listed first in each category. The full red-to-blue pairing is
 
 | Phase | Focus | Status |
 |---|---|---|
-| 1 | Full mirror of claude-red, one defensive skill per offensive skill | Complete |
-| 2 | Validator, manifest generator, and rule sync in CI | Complete |
+| 1 | Full mirror of claude-red, one defensive skill per offensive skill | In progress (78 of 79; `offensive-netexec` needs a skill) |
+| 2 | Validator, manifest generator, and rule sync tool, with generated files and sigma-pack drift checked in CI | Complete |
 | 3 | Promote Tier 2 skills to Tier 1 as UMBRASEC writeups and rules land, starting with identity, cloud, and web | In progress |
 | 4 | Claude Code plugin marketplace packaging | Planned |
 | 5 | Track new claude-red skills as they ship, keeping the pairing complete | Ongoing |

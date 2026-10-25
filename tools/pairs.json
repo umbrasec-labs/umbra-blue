@@ -1,9 +1,16 @@
 {
-  "_comment": "Single source of truth for the red-to-blue pairing. One entry per claude-red skill to umbra-blue skill pair. Run python3 tools/build_manifest.py after editing; it regenerates claude-skills.json, COVERAGE.md, MINDMAP.md, and the README skill index.",
+  "_comment": "Single source of truth for the red-to-blue pairing. One entry per claude-red skill to umbra-blue skill pair. upstream.unanswered lists claude-red skills that no umbra-blue skill answers yet. Run python3 tools/build_manifest.py after editing; it regenerates claude-skills.json, COVERAGE.md, MINDMAP.md, and the README skill index.",
   "upstream": {
     "name": "claude-red",
     "url": "https://github.com/SnailSploit/claude-red",
-    "skill_count": 78
+    "skill_count": 79,
+    "unanswered": [
+      {
+        "red": "offensive-netexec",
+        "category": "active-directory",
+        "needs": "SMB, WinRM and LDAP password spraying, pass-the-hash, remote execution, share and user enumeration, and credential dumping (SAM, LSA, LSASS, NTDS)"
+      }
+    ]
   },
   "pairs": [
     {
