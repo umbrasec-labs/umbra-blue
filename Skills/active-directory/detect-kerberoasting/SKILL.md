@@ -57,6 +57,7 @@ references:
     - https://umbrasec.dev/research/detecting-kerberoasting.html
 author: UMBRASEC
 date: 2026-06-10
+modified: 2026-10-25
 tags:
     - attack.credential-access
     - attack.t1558.003
@@ -67,7 +68,9 @@ detection:
     selection:
         EventID: 4769
         TicketEncryptionType: '0x17'   # RC4-HMAC
-        TicketOptions: '0x40810000'     # see tuning note - remove if too narrow
+        # TicketOptions: '0x40810000'  # OFF by default: roasting tools vary this flag, so
+                                       # ANDing it here misses them. Opt-in tightening filter
+                                       # only - see the writeup tuning note before enabling.
         Status: '0x0'                   # only count successfully issued tickets
     filter_machine:
         ServiceName|endswith: '$'
@@ -99,7 +102,7 @@ references:
     - https://umbrasec.dev/research/detecting-kerberoasting.html
 author: UMBRASEC
 date: 2026-06-10
-modified: 2026-10-23
+modified: 2026-10-25
 tags:
     - attack.credential-access
     - attack.t1558.003
@@ -116,6 +119,7 @@ correlation:
 falsepositives:
     - Vulnerability scanners and monitoring accounts that request tickets for many services in a burst - allowlist them
     - Busy legitimate accounts above the default threshold - run it report-only first and set gte above your noisiest legitimate account
+level: medium
 ---
 title: Kerberoasting 4769 base
 id: 2d0e5c88-3f66-4012-cc4b-7e9f0a1b2c33
@@ -150,10 +154,10 @@ references:
     - https://umbrasec.dev/research/detecting-kerberoasting.html
 author: UMBRASEC
 date: 2026-06-10
+modified: 2026-10-25
 tags:
     - attack.credential-access
     - attack.t1558.003
-    - attack.deception
 logsource:
     product: windows
     service: security
@@ -169,7 +173,7 @@ level: high
 
 ## Tuning and false positives
 
-- **Rule 1 (`TicketOptions`).** The `0x40810000` line tightens precision but misses tools that vary their flags. Start without it to measure your baseline of RC4 requests, identify the legitimate RC4-only accounts, add those to `filter_machine` as an allowlist, then decide whether the `TicketOptions` constraint earns its keep.
+- **Rule 1 (`TicketOptions`).** The rule ships with the `TicketOptions: '0x40810000'` line commented out. Enabled, it tightens precision but misses tools that vary their flags. Start without it to measure your baseline of RC4 requests, identify the legitimate RC4-only accounts, add those to `filter_machine` as an allowlist, then decide whether the `TicketOptions` constraint earns its keep.
 - **Rule 2 (threshold and window).** `gte: 15` over `5m` are starting points. Run it in report-only mode for a week, look at your top talkers - vulnerability scanners and monitoring accounts will appear, allowlist them - and set the threshold above your noisiest legitimate account.
 - **Rule 3 (honeypot).** Replace `svc-honeypot-sql` with your decoy's `sAMAccountName`. A hit should be near-binary; the only benign cause is a scanner pointed at the decoy, which is still worth investigating.
 

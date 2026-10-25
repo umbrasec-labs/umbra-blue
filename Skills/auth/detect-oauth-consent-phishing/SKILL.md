@@ -23,7 +23,7 @@ The scopes worth alerting on are the ones that give reach: `Mail.Read`, `Mail.Re
 
 The detections assume Entra ID logs are shipping into Microsoft Sentinel or any Log Analytics workspace via Entra diagnostic settings. Confirm each of these is enabled and exported; the data is useless if it only lives in the portal's 30-day view.
 
-- **Entra ID audit logs** (`AuditLogs` table) - the primary source. Records the `Consent to application` operation and the `Add app role assignment to service principal` / `Add app role assignment grant to user` operations, with `Result`, `InitiatedBy.user.userPrincipalName`, and the `TargetResources.modifiedProperties` bag that carries `ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`, `TargetId.ServicePrincipalNames`, `AppRole.Value`, and `ServicePrincipal.DisplayName`.
+- **Entra ID audit logs** (`AuditLogs` table) - the primary source. Records the `Consent to application` operation and the `Add app role assignment to service principal` / `Add app role assignment grant to user` operations, with `Result`, `InitiatedBy.user.userPrincipalName` (or `InitiatedBy.app.displayName` when a service principal acted), and the `TargetResources.modifiedProperties` bag that carries `ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`, `TargetId.ServicePrincipalNames`, `AppRole.Value`, and `ServicePrincipal.DisplayName`.
 - **Microsoft Graph activity logs** (`MicrosoftGraphActivityLogs`) - per-request telemetry for Graph calls, including the write that creates the grant and the reads that follow it. Fields used: `RequestMethod`, `RequestUri`, `ResponseStatusCode`, `UserId`, `AppId`, `IPAddress`. A missing export of this table blinds detection 2 entirely.
 - **Service principal sign-in logs** (`AADServicePrincipalSignInLogs`) - shows the application itself authenticating, often from infrastructure unrelated to any of your users. Used by the hunt below.
 - If you are licensed for it, mirror the **Unified Audit Log** in Microsoft Purview, where the same consent events surface for compliance search.
@@ -42,8 +42,9 @@ The bread-and-butter detection: a successful `Consent to application` where the 
 // Entra ID audit: consent to an app requesting sensitive delegated scopes
 // Source writeup: https://umbrasec.dev/research/detecting-oauth-consent-phishing.html
 // Tuning: allowlist sanctioned AppIds; IsAdminConsent == "True" is the
-// high-severity branch (tenant-wide grant). Validate modifiedProperties
-// field names against your own tenant before alerting.
+// high-severity branch (tenant-wide grant). modifiedProperties newValue
+// arrives JSON-quoted, so the value is de-quoted below before comparison.
+// Validate modifiedProperties field names against your own tenant before alerting.
 AuditLogs
 | where OperationName == "Consent to application"
 | where Result == "success"
@@ -53,9 +54,10 @@ AuditLogs
 | extend propName = tostring(mods.displayName), newVal = tostring(mods.newValue)
 | summarize props = make_bag(bag_pack(propName, newVal))
         by CorrelationId, TimeGenerated,
-           Actor = tostring(InitiatedBy.user.userPrincipalName)
+           Actor = coalesce(tostring(InitiatedBy.user.userPrincipalName),
+                            tostring(InitiatedBy.app.displayName))
 | extend Permissions   = tostring(props["ConsentAction.Permissions"]),
-         IsAdminConsent = tostring(props["ConsentContext.IsAdminConsent"]),
+         IsAdminConsent = trim('"', tostring(props["ConsentContext.IsAdminConsent"])),
          AppDisplayName = tostring(props["TargetId.ServicePrincipalNames"])
 | where Permissions has_any (
         "Mail.Read", "Mail.ReadWrite", "Mail.Send", "MailboxSettings.ReadWrite",
@@ -107,14 +109,15 @@ AuditLogs
 | extend propName = tostring(mods.displayName), newVal = tostring(mods.newValue)
 | where propName in ("AppRole.Value", "ServicePrincipal.DisplayName")
 | project TimeGenerated, OperationName,
-          Actor = tostring(InitiatedBy.user.userPrincipalName), propName, newVal
+          Actor = coalesce(tostring(InitiatedBy.user.userPrincipalName),
+                          tostring(InitiatedBy.app.displayName)), propName, newVal
 ```
 
 ## Tuning and false positives
 
 Baseline each rule in report-only mode before alerting; the scope lists and thresholds are dials, not gospel.
 
-- **Rule 1 (sensitive scopes).** Scope strings are noisy - plenty of legitimate apps request `Mail.Read`. Maintain an allowlist of `AppId`s for sanctioned applications and exclude them. Treat `IsAdminConsent == "True"` as the high-severity branch: a tenant-wide grant exposes every user, not just the clicker. Validate the `modifiedProperties` field names (`ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`) against your own tenant first, because the shape has changed across schema versions.
+- **Rule 1 (sensitive scopes).** Scope strings are noisy - plenty of legitimate apps request `Mail.Read`. Maintain an allowlist of `AppId`s for sanctioned applications and exclude them. Treat `IsAdminConsent == "True"` as the high-severity branch: a tenant-wide grant exposes every user, not just the clicker. Entra writes each `modifiedProperties` `newValue` JSON-quoted, so the query strips the quotes before that comparison, and `Actor` falls back to the app's display name when a service principal made the grant (rule 3 does the same). Validate the `modifiedProperties` field names (`ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`) against your own tenant first, because the shape has changed across schema versions.
 - **Rule 2 (the grant POST).** Your own admins legitimately create grants during app onboarding. Scope this to actors outside your identity and app-admin roles, or correlate the source `IPAddress` against known administrative networks; grants from standard users, or from hosting and proxy ASNs, are the ones to surface.
 - **Rule 3 (app-role assignments).** These should be rare and deliberate. Flag high-value roles by name - `full_access_as_app` (Exchange), `Mail.ReadWrite`, and any `*.ReadWrite.All` - and reconcile every hit against a change ticket. Because the application-permission path generally requires an already-privileged actor, a hit is as much an insider or compromised-admin signal as a phishing one.
 
