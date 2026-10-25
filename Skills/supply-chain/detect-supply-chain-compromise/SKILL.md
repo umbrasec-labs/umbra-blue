@@ -186,7 +186,7 @@ These detections confirm a known compromise landed; they are not a generic defen
 
 ## ATT&CK and references
 
-- MITRE ATT&CK: [T1195.002 Compromise Software Supply Chain](https://attack.mitre.org/techniques/T1195/002/); [T1199 Trusted Relationship](https://attack.mitre.org/techniques/T1199/); [T1546 Event Triggered Execution](https://attack.mitre.org/techniques/T1546/); [T1552 Unsecured Credentials](https://attack.mitre.org/techniques/T1552/); [T1543.003 Windows Service](https://attack.mitre.org/techniques/T1543/003/); [T1572 Protocol Tunneling](https://attack.mitre.org/techniques/T1572/); [T1036.005 Match Legitimate Name or Location](https://attack.mitre.org/techniques/T1036/005/).
+- MITRE ATT&CK: [T1195.002 Compromise Software Supply Chain](https://attack.mitre.org/techniques/T1195/002/); [T1199 Trusted Relationship](https://attack.mitre.org/techniques/T1199/); [T1546 Event Triggered Execution](https://attack.mitre.org/techniques/T1546/); [T1552 Unsecured Credentials](https://attack.mitre.org/techniques/T1552/); [T1543.003 Windows Service](https://attack.mitre.org/techniques/T1543/003/); [T1572 Protocol Tunneling](https://attack.mitre.org/techniques/T1572/); [T1036.005 Match Legitimate Resource Name or Location](https://attack.mitre.org/techniques/T1036/005/).
 - MITRE D3FEND: D3-EAL Executable Allowlisting; D3-MFA Multi-factor Authentication; D3-FA File Analysis; D3-OTF Outbound Traffic Filtering.
 - UMBRASEC writeup (MSP / RMM case): [Your MSP's RMM Is Your Attack Surface](https://umbrasec.dev/research/n-able-ncentral-msp-supply-chain.html) (2026-08-12).
 - UMBRASEC writeup (LiteLLM gateway context): [Detecting the LiteLLM Command Injection](https://umbrasec.dev/research/detecting-litellm-command-injection.html) (2026-06-13).
