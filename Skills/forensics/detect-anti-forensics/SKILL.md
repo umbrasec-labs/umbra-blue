@@ -1,6 +1,6 @@
 ---
 name: detect-anti-forensics
-description: "Detection and hunt methodology for anti-forensic indicator removal on Windows endpoints: audit-log clearing (MITRE ATT&CK T1070.001), timestomping (T1070.006), and file wiping or artifact deletion (T1070.004), under the T1070 Indicator Removal parent, with the adjacent Impair Defenses signals T1562.002 Disable Windows Event Logging. It keys off Windows Security event 1102, System event 104, Security 1100 and 4719, Sysmon event 2 (file creation time changed) and events 23 and 26 (file delete), plus process-creation and PowerShell logging. The skill gives defenders the real event IDs and fields, a forensic-grade MFT and USN hunt for timestomping, hardening that moves evidence off the host, and links to public SigmaHQ and MITRE rule sources. Use when triaging an Event ID 1102 alert, investigating a cleared Security log, hunting for timestomped files, chasing suspected log tampering or wevtutil cl / Clear-EventLog activity, or hardening log retention so a local wipe does not destroy evidence."
+description: "Detection and hunt methodology for anti-forensic indicator removal on Windows endpoints: audit-log clearing (MITRE ATT&CK T1685.005), timestomping (T1070.006), and file wiping or artifact deletion (T1070.004), the last two under the T1070 Indicator Removal parent, with the adjacent Defense Impairment signal T1685.001 Disable or Modify Windows Event Log. It keys off Windows Security event 1102, System event 104, Security 1100 and 4719, Sysmon event 2 (file creation time changed) and events 23 and 26 (file delete), plus process-creation and PowerShell logging. The skill gives defenders the real event IDs and fields, a forensic-grade MFT and USN hunt for timestomping, hardening that moves evidence off the host, and links to public SigmaHQ and MITRE rule sources. Use when triaging an Event ID 1102 alert, investigating a cleared Security log, hunting for timestomped files, chasing suspected log tampering or wevtutil cl / Clear-EventLog activity, or hardening log retention so a local wipe does not destroy evidence."
 ---
 
 # Anti-Forensics (Indicator Removal) - Defensive Methodology
@@ -20,11 +20,11 @@ A Security log that ends abruptly, then resumes, with a lone 1102 at the seam. A
 - **Security 1102** "The audit log was cleared." Security channel only. Fields: `SubjectUserName`, `SubjectDomainName`, `SubjectUserSid`, `SubjectLogonId`. Pivot on `SubjectLogonId` to the session that did it. Most shops watch only this one.
 - **System 104** "The event log file was cleared" (provider `Microsoft-Windows-Eventlog`). Fires when **Application, System, or any non-Security channel** is cleared. Fields include the clearing user and `Channel`. If you alert on 1102 alone you miss a clear of every other log.
 - **Security 1100** "The event logging service has shut down." Stopping the service before tampering means 1102 may never be written. Treat an unexpected 1100 on a server as suspicious.
-- **Security 4719** "System audit policy was changed." Turning auditing off (T1562.002) silences future events without clearing anything.
+- **Security 4719** "System audit policy was changed." Turning auditing off (T1685.001) silences future events without clearing anything.
 - **Sysmon Event ID 2** "A process changed a file creation time." Fields: `Image`, `TargetFilename`, `CreationUtcTime`, `PreviousCreationUtcTime`. This is the direct timestomp signal, but its scope is narrow: creation time only, `$STANDARD_INFORMATION` only, via the `SetFileTime` API, and it needs an explicit include in the Sysmon config. It is noisy by default (installers, browsers, archive extraction, Office).
 - **Sysmon Event ID 23 / 26** "File Delete archived / File Delete detected." The artifact-wipe signal. Both require explicit Sysmon config and 23 needs an archive directory with space. Native `Security 4660 / 4663` only fire where a SACL exists on the path.
 - **Process creation** (Sysmon 1, or Security 4688 with command-line auditing enabled) and **PowerShell script-block logging 4104** carry the acts themselves: `wevtutil cl`, `Clear-EventLog`, `Remove-EventLog`, `fsutil usn deletejournal`, `cipher /w`, and sdelete-style secure-delete tools.
-- **Linux** (T1070.002 / T1070.003), one note: an auditd watch `-w /var/log -p wa` and watches on `~/.bash_history`, `/var/log/wtmp` and `/var/log/btmp`, plus syscall rules for `utimensat` / `utimes`, catch log truncation, history clearing, and timestamp changes.
+- **Linux** (T1685.006 / T1070.003), one note: an auditd watch `-w /var/log -p wa` and watches on `~/.bash_history`, `/var/log/wtmp` and `/var/log/btmp`, plus syscall rules for `utimensat` / `utimes`, catch log truncation, history clearing, and timestamp changes.
 
 What normal looks like: 1102 and 104 appear during deliberate reimaging and decommissioning, so baseline those windows. Sysmon 2 is routine for software installs, which is why the timestomp signal is better confirmed in the MFT than alerted on from event 2 alone.
 
@@ -35,7 +35,7 @@ Alert outright on **Security 1102** and **System 104**. Neither is produced by n
 - **SigmaHQ** (github.com/SigmaHQ/sigma): `rules/windows/builtin/security` and `rules/windows/builtin/system` for the 1102 / 104 / 1100 / 4719 clears, `rules/windows/process_creation` for `wevtutil` and friends, `rules/windows/file/file_change` for timestomp, `rules/windows/file/file_delete` for wiping, and `rules/linux/auditd` for the Linux equivalents.
 - **MITRE CAR** analytic CAR-2016-04-002 "User Activity from Clearing Event Logs."
 - **Elastic detection-rules** (github.com/elastic/detection-rules) and **Splunk Security Content** (research.splunk.com) both ship maintained "Windows Event Log Cleared" analytics.
-- **MITRE ATT&CK** technique pages for T1070.001, T1070.004 and T1070.006 carry the current detection and mitigation guidance.
+- **MITRE ATT&CK** technique pages for T1685.005, T1070.004 and T1070.006 carry the current detection and mitigation guidance.
 
 ## Threat hunt
 
@@ -64,9 +64,9 @@ Per-record tampering (editing or selectively deleting individual `.evtx` records
 
 ## ATT&CK and D3FEND
 
-- MITRE ATT&CK: [T1070 Indicator Removal](https://attack.mitre.org/techniques/T1070/), [T1070.001 Clear Windows Event Logs](https://attack.mitre.org/techniques/T1070/001/), [T1070.006 Timestomp](https://attack.mitre.org/techniques/T1070/006/), [T1070.004 File Deletion](https://attack.mitre.org/techniques/T1070/004/); adjacent [T1562.002 Disable Windows Event Logging](https://attack.mitre.org/techniques/T1562/002/).
+- MITRE ATT&CK: [T1070 Indicator Removal](https://attack.mitre.org/techniques/T1070/), [T1685.005 Clear Windows Event Logs](https://attack.mitre.org/techniques/T1685/005/), [T1070.006 Timestomp](https://attack.mitre.org/techniques/T1070/006/), [T1070.004 File Deletion](https://attack.mitre.org/techniques/T1070/004/); adjacent [T1685.001 Disable or Modify Windows Event Log](https://attack.mitre.org/techniques/T1685/001/).
 - ATT&CK mitigations: M1029 Remote Data Storage (forward and store logs off the host) and M1022 Restrict File and Directory Permissions.
-- MITRE D3FEND: the Detect tactic answers Indicator Removal; the per-technique countermeasure list is at [d3fend.mitre.org/offensive-technique/attack/T1070.001](https://d3fend.mitre.org/offensive-technique/attack/T1070.001/). The defensive move that matters most here is moving the log off the host and analysing it where the attacker cannot reach it; specific D3-xxx identifiers are not asserted here because they were not verified against the live knowledge graph.
+- MITRE D3FEND: the Detect tactic answers Indicator Removal; the per-technique countermeasure list is at [d3fend.mitre.org/offensive-technique/attack/T1070.001](https://d3fend.mitre.org/offensive-technique/attack/T1070.001/) (D3FEND has not yet mapped the ATT&CK v19 IDs, so it still files T1685.005 under this revoked ID). The defensive move that matters most here is moving the log off the host and analysing it where the attacker cannot reach it; specific D3-xxx identifiers are not asserted here because they were not verified against the live knowledge graph.
 - Public rule sources: SigmaHQ (github.com/SigmaHQ/sigma), MITRE CAR CAR-2016-04-002, Elastic detection-rules, Splunk Security Content.
 
 **Scope note.** This is a defensive skill. It explains anti-forensic indicator removal only to the depth needed to detect, hunt, and mitigate it, names commands only to recognise them in telemetry, and ships no wiping, timestomping, or log-clearing tooling.

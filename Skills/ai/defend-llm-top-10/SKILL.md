@@ -1,6 +1,6 @@
 ---
 name: defend-llm-top-10
-description: "Defensive playbook for the OWASP Top 10 for LLM Applications (2025), centered on prompt injection (MITRE ATLAS AML.T0051, direct and indirect), RAG retrieval abuse (LLM08), and improper output handling (LLM05). Prompt injection has no patch, so defense is logging, blast-radius design, and breaking the lethal-trifecta exfiltration path, as seen in EchoLeak (CVE-2025-32711). Keys off LLM app telemetry: prompt and completion logs, tool-call audit events, RAG retrieval logs, guardrail verdicts, the Purview unified audit log for Copilot, and Azure OpenAI diagnostics. Ships a canary-token tripwire, an egress/exfiltration detection, a tool-call fan-out rule, required logging, and a mitigation table. Use when threat-modeling an LLM, RAG, or agent feature, deciding what to log, writing detections for prompt injection or system-prompt leakage, hunting copilot data exfiltration, or triaging an EchoLeak-style incident."
+description: "Defensive playbook for the OWASP Top 10 for LLM Applications (2025), centered on prompt injection (MITRE ATLAS AML.T0051, direct and indirect; MITRE ATT&CK T1699, T1698), RAG retrieval abuse (LLM08), and improper output handling (LLM05). Prompt injection has no patch, so defense is logging, blast-radius design, and breaking the lethal-trifecta exfiltration path, as seen in EchoLeak (CVE-2025-32711). Keys off LLM app telemetry: prompt and completion logs, tool-call audit events, RAG retrieval logs, guardrail verdicts, the Purview unified audit log for Copilot, and Azure OpenAI diagnostics. Ships a canary-token tripwire, an egress/exfiltration detection, a tool-call fan-out rule, required logging, and a mitigation table. Use when threat-modeling an LLM, RAG, or agent feature, deciding what to log, writing detections for prompt injection or system-prompt leakage, hunting copilot data exfiltration, or triaging an EchoLeak-style incident."
 ---
 
 # OWASP LLM Top 10 - Detection and Response for Defenders
@@ -143,7 +143,8 @@ Design beats detection here: more than in any other area, the architecture is th
 
 ## ATT&CK and references
 
-- MITRE ATLAS: [AML.T0051 LLM Prompt Injection](https://atlas.mitre.org/techniques/AML.T0051) (the AI matrix that is MITRE's counterpart to ATT&CK; direct and indirect variants). ATLAS, not enterprise ATT&CK, is where prompt injection is catalogued.
+- MITRE ATLAS: [AML.T0051 LLM Prompt Injection](https://atlas.mitre.org/techniques/AML.T0051) (the AI matrix that is MITRE's counterpart to ATT&CK; direct and indirect variants). ATLAS is the fuller catalogue of AI attacks; since ATT&CK v20 enterprise ATT&CK also lists prompt injection.
+- MITRE ATT&CK: [T1699 Direct Prompt Injection](https://attack.mitre.org/techniques/T1699/) and [T1698 Indirect Prompt Injection](https://attack.mitre.org/techniques/T1698/) (Execution); [T1700 AI-Enabled Exfiltration](https://attack.mitre.org/techniques/T1700/) (Exfiltration) for the EchoLeak-style path where injected content makes an enterprise copilot send data out.
 - MITRE D3FEND: Outbound Traffic Filtering (D3-OTF) for the egress-break countermeasure in rule 2.
 - UMBRASEC writeup: [Prompt Injection and the OWASP LLM Top 10: A Field Guide for Defenders](https://umbrasec.dev/research/owasp-llm-top-10-for-defenders.html) (2026-06-11).
 - Microsoft Learn - Search the audit log / Copilot activities in the Purview unified audit log (the `CopilotInteraction` operation); Azure OpenAI monitoring and diagnostic logs.
