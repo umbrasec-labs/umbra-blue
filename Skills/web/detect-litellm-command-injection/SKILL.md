@@ -58,7 +58,7 @@ references:
     - https://umbrasec.dev/research/detecting-litellm-command-injection.html
 author: UMBRASEC
 date: 2026-06-13
-modified: 2026-10-23
+modified: 2026-10-25
 tags:
     - attack.initial-access
     - attack.t1190
@@ -72,6 +72,8 @@ detection:
         ParentImage|endswith:
             - '/python'
             - '/python3'
+            - '/python3.7'
+            - '/python3.8'
             - '/python3.9'
             - '/python3.10'
             - '/python3.11'
@@ -311,7 +313,7 @@ references:
     - https://litellm.ai
 author: UMBRASEC
 date: 2026-10-23
-modified: 2026-10-23
+modified: 2026-10-25
 tags:
     - attack.exfiltration
     - attack.t1041
@@ -336,8 +338,20 @@ detection:
             - '.litellm.dev.:'
     selection_uri:
         c-uri|contains:
+            - '//litellm.dev/'
+            - '//litellm.dev:'
+            - '//litellm.dev./'
+            - '//litellm.dev.:'
+            - '//www.litellm.dev/'
+            - '//www.litellm.dev:'
+            - '//www.litellm.dev./'
+            - '//www.litellm.dev.:'
+    selection_uri_bare:
+        c-uri|endswith:
             - '//litellm.dev'
+            - '//litellm.dev.'
             - '//www.litellm.dev'
+            - '//www.litellm.dev.'
     condition: 1 of selection_*
 falsepositives:
     - Analysts or sandboxes deliberately resolving or fetching the indicator
