@@ -148,7 +148,7 @@ Architecture is the real control, more so than with most threats because the age
 
 ## ATT&CK and references
 
-- MITRE ATLAS: [AML.T0051 LLM Prompt Injection](https://atlas.mitre.org/techniques/AML.T0051) and sub-technique AML.T0051.001 Indirect; [AML.T0053 LLM Plugin Compromise](https://atlas.mitre.org/techniques/AML.T0053).
+- MITRE ATLAS: [AML.T0051 LLM Prompt Injection](https://atlas.mitre.org/techniques/AML.T0051) and sub-technique AML.T0051.001 Indirect; [AML.T0053 AI Agent Tool Invocation](https://atlas.mitre.org/techniques/AML.T0053).
 - MITRE ATT&CK: [T1698 Indirect Prompt Injection](https://attack.mitre.org/techniques/T1698/) (Execution) for hostile instructions arriving in tool output; [T1700 AI-Enabled Exfiltration](https://attack.mitre.org/techniques/T1700/) (Exfiltration) for an injected agent sending data out with its own sanctioned tools.
 - MITRE D3FEND: D3-OTF Outbound Traffic Filtering (break the exfiltration leg).
 - OWASP Top 10 for LLM Applications (2025): LLM06 Excessive Agency, LLM01 Prompt Injection, LLM03 Supply Chain, LLM05 Improper Output Handling, LLM08 Vector and Embedding Weaknesses, LLM10 Unbounded Consumption.
