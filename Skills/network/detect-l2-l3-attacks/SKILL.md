@@ -48,7 +48,7 @@ DAI and IP Source Guard are only as good as the DHCP-snooping binding table they
 
 ## ATT&CK and D3FEND
 
-- MITRE ATT&CK: [T1557 Adversary-in-the-Middle](https://attack.mitre.org/techniques/T1557/) with [T1557.001 LLMNR/NBT-NS Poisoning and SMB Relay](https://attack.mitre.org/techniques/T1557/001/), [T1557.002 ARP Cache Poisoning](https://attack.mitre.org/techniques/T1557/002/), and [T1557.003 DHCP Spoofing](https://attack.mitre.org/techniques/T1557/003/). On-LAN DNS forgery that follows the poisoning sits under the T1557 parent.
+- MITRE ATT&CK: [T1557 Adversary-in-the-Middle](https://attack.mitre.org/techniques/T1557/) with [T1557.001 Name Resolution Poisoning and SMB Relay](https://attack.mitre.org/techniques/T1557/001/), [T1557.002 ARP Cache Poisoning](https://attack.mitre.org/techniques/T1557/002/), and [T1557.003 DHCP Spoofing](https://attack.mitre.org/techniques/T1557/003/). On-LAN DNS forgery that follows the poisoning sits under the T1557 parent.
 - MITRE D3FEND: [D3-NTA Network Traffic Analysis](https://d3fend.mitre.org/technique/d3f:NetworkTrafficAnalysis/) and [D3-DNSTA DNS Traffic Analysis](https://d3fend.mitre.org/technique/d3f:DNSTrafficAnalysis/) for the detection side; [D3-BDI Broadcast Domain Isolation](https://d3fend.mitre.org/technique/d3f:BroadcastDomainIsolation/) for the segmentation hardening that confines every one of these attacks.
 - Public rule and sensor sources: Cisco DAI / DHCP Snooping / IP Source Guard configuration guides; [arpwatch](https://ee.lbl.gov/); [Respounder](https://github.com/codeexpress/respounder) canary detection; [Zeek](https://docs.zeek.org/) `dns.log` and `dhcp.log`; [SigmaHQ repository](https://github.com/SigmaHQ/sigma) `rules/network/zeek/` and `rules/windows/network_connection/`.
 
