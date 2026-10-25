@@ -1,6 +1,6 @@
 ---
 name: detect-oauth-consent-phishing
-description: "Detection and response methodology for OAuth consent phishing / illicit consent grants in Microsoft 365 and Entra ID (MITRE ATT&CK T1528). An attacker phishes a user into consenting to an OAuth app with delegated Graph permissions such as Mail.Read and offline_access, so no password is stolen and MFA is never challenged, yet the refresh token is a durable key to mail and files. Ships three KQL detections over Entra AuditLogs 'Consent to application' and app-role-assignment events and MicrosoftGraphActivityLogs oauth2PermissionGrants, with tuning, false-positive notes, a hunt, and consent-restriction mitigations. Use when investigating a suspicious enterprise app or consent grant, triaging a 'Consent to application' event, hunting illicit OAuth grants or refresh-token abuse in Entra ID, writing consent-phishing detections, or responding to a Midnight Blizzard-style app-consent attack."
+description: "Detection and response methodology for OAuth consent phishing / illicit consent grants in Microsoft 365 and Entra ID (MITRE ATT&CK T1528). An attacker phishes a user into consenting to an OAuth app with delegated Graph permissions such as Mail.Read and offline_access, so no password is stolen and MFA is never challenged, yet the refresh token is a durable key to mail and files. Ships four KQL detections over Entra AuditLogs (consent, app-role assignment, and new app credentials as follow-on persistence, T1098.001) and MicrosoftGraphActivityLogs oauth2PermissionGrants, with tuning, false-positive notes, a hunt, and consent-restriction mitigations. Use when investigating a suspicious enterprise app or consent grant, triaging a 'Consent to application' event, hunting illicit OAuth grants or refresh-token abuse in Entra ID, checking a new secret or certificate on an app, writing consent-phishing detections, or responding to a Midnight Blizzard-style app-consent attack."
 ---
 
 # OAuth Consent Phishing - Detection and Response
@@ -9,7 +9,7 @@ OAuth consent phishing never asks for a password and sails straight through MFA,
 
 ## TL;DR for defenders
 
-Make sure Entra ID logs are actually exported to a Log Analytics workspace or Microsoft Sentinel, not just living in the portal's 30-day view. Then watch the Entra **AuditLogs** table for a `Consent to application` event granting sensitive scopes (mail, files, directory, or `offline_access`), and watch **MicrosoftGraphActivityLogs** for the **POST** to a URI containing `oauth2PermissionGrants` - that POST is the act of granting delegated permission and is the single highest-fidelity moment. A tenant-wide `IsAdminConsent == "True"` grant, or an app-role (application permission) assignment like `full_access_as_app`, is the high-severity branch. Then shrink the blast radius by turning off unrestricted user consent. Queries below; none is a verdict on its own.
+Make sure Entra ID logs are actually exported to a Log Analytics workspace or Microsoft Sentinel, not just living in the portal's 30-day view. Then watch the Entra **AuditLogs** table for a `Consent to application` event granting sensitive scopes (mail, files, directory, or `offline_access`), and watch **MicrosoftGraphActivityLogs** for the **POST** to a URI containing `oauth2PermissionGrants` - that POST is the act of granting delegated permission and is the single highest-fidelity moment. A tenant-wide `IsAdminConsent == "True"` grant, or an app-role (application permission) assignment like `full_access_as_app`, is the high-severity branch. After the grant, watch for a new client secret or certificate on an application or service principal: that gives the attacker a credential of their own, which keeps working after the user's tokens are revoked. Then shrink the blast radius by turning off unrestricted user consent. Queries below; none is a verdict on its own.
 
 ## Why a click beats a credential
 
@@ -23,14 +23,14 @@ The scopes worth alerting on are the ones that give reach: `Mail.Read`, `Mail.Re
 
 The detections assume Entra ID logs are shipping into Microsoft Sentinel or any Log Analytics workspace via Entra diagnostic settings. Confirm each of these is enabled and exported; the data is useless if it only lives in the portal's 30-day view.
 
-- **Entra ID audit logs** (`AuditLogs` table) - the primary source. Records the `Consent to application` operation and the `Add app role assignment to service principal` / `Add app role assignment grant to user` operations, with `Result`, `InitiatedBy.user.userPrincipalName` (or `InitiatedBy.app.displayName` when a service principal acted), and the `TargetResources.modifiedProperties` bag that carries `ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`, `TargetId.ServicePrincipalNames`, `AppRole.Value`, and `ServicePrincipal.DisplayName`.
+- **Entra ID audit logs** (`AuditLogs` table) - the primary source. Records the `Consent to application` operation and the `Add app role assignment to service principal` / `Add app role assignment grant to user` operations, with `Result`, `InitiatedBy.user.userPrincipalName` (or `InitiatedBy.app.displayName` when a service principal acted), and the `TargetResources.modifiedProperties` bag that carries `ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`, `TargetId.ServicePrincipalNames`, `AppRole.Value`, and `ServicePrincipal.DisplayName`. Added credentials land in the same table under the `ApplicationManagement` category, among others as `Update application - Certificates and secrets management` for the application object and `Add service principal credentials` for the service principal, each with a `KeyDescription` property whose old and new values list the object's keys.
 - **Microsoft Graph activity logs** (`MicrosoftGraphActivityLogs`) - per-request telemetry for Graph calls, including the write that creates the grant and the reads that follow it. Fields used: `RequestMethod`, `RequestUri`, `ResponseStatusCode`, `UserId`, `AppId`, `IPAddress`. A missing export of this table blinds detection 2 entirely.
 - **Service principal sign-in logs** (`AADServicePrincipalSignInLogs`) - shows the application itself authenticating, often from infrastructure unrelated to any of your users. Used by the hunt below.
 - If you are licensed for it, mirror the **Unified Audit Log** in Microsoft Purview, where the same consent events surface for compliance search.
 
 ## Detection
 
-Three layers, cheapest signal first. Treat the KQL as a starting point: the exact property paths inside `modifiedProperties` shift between schema versions, so validate field names against your own tenant before you alert on them. Canonical copies of these rules live in the UMBRASEC [sigma-pack](https://umbrasec.dev/tools/sigma-pack/); the writeup explains each in full.
+Three layers, cheapest signal first, then a fourth query for the persistence step that follows. Treat the KQL as a starting point: the exact property paths inside `modifiedProperties` shift between schema versions, so validate field names against your own tenant before you alert on them. Canonical copies of these rules live in the UMBRASEC [sigma-pack](https://umbrasec.dev/tools/sigma-pack/); the writeup explains each in full.
 
 ### 1. Consent grants that include sensitive scopes
 
@@ -113,6 +113,65 @@ AuditLogs
                           tostring(InitiatedBy.app.displayName)), propName, newVal
 ```
 
+### 4. Follow-on: new credentials on an app (persistence)
+
+Consent phishing (T1528) gets an attacker a token. Adding a client secret or certificate to an application or service principal gets them a credential of their own, which keeps working after the user's tokens are revoked. MITRE tracks that as [T1098.001 Additional Cloud Credentials](https://attack.mitre.org/techniques/T1098/001/) and lists APT29 adding credentials to OAuth applications and service principals during the SolarWinds compromise. The same page gives the escalation case: an Application Administrator adds credentials to an app's service principal and gains that service principal's roles and permissions. The query keeps only the keys that are new after each change, one row per key, and returns three triage flags: `OnServicePrincipal`, `ByApp` and `FirstCredential`.
+
+```kql
+// app-credential-added.kql (canonical copy: https://umbrasec.dev/tools/sigma-pack/)
+// UMBRASEC sigma-pack - OAuth consent phishing follow-on: persistence via added app credentials (T1098.001)
+// New client secret or certificate on an application or service principal
+// Source writeup: https://umbrasec.dev/research/detecting-oauth-consent-phishing.html
+// Tuning: certificate rotation, CI/CD pipelines and apps that roll their own keys
+// add credentials on a schedule; allowlist those actors and target ids. A SAML app's
+// token signing certificate adds a Sign key, a Verify key and a password (the
+// certificate's) to its service principal; allowlist SAML apps too. Triage first:
+// OnServicePrincipal, then ByApp, then FirstCredential. Microsoft Learn does not
+// document the KeyDescription value; the query parses it the way Microsoft's own
+// Sentinel rules do but keeps every key usage, where they keep only Verify. Validate
+// it against your own tenant before alerting.
+AuditLogs
+// The app-object activity is "Update application", a dash, then "Certificates and
+// secrets management". Microsoft writes a hyphen in its audit reference and an en
+// dash in its IR playbook, so the query matches the words after the dash.
+// Microsoft's security-operations guide also lists "Update service principal" and
+// "Update application" for added credentials; rows that add no key drop out below.
+| where OperationName has "Certificates and secrets management"
+     or OperationName has "Add service principal"   // also "Add service principal credentials"
+     or OperationName in~ ("Update service principal", "Update application")
+| where Result == "success"
+| mv-expand Target = TargetResources
+| mv-expand Mod = Target.modifiedProperties
+| where tostring(Mod.displayName) == "KeyDescription"
+// newValue and oldValue are strings that hold a JSON array of key descriptions
+| extend NewKeys = todynamic(tostring(Mod.newValue)),
+         OldKeys = todynamic(iff(isempty(tostring(Mod.oldValue)), "[]", tostring(Mod.oldValue)))
+| extend AddedKeys = set_difference(NewKeys, OldKeys)
+| where array_length(AddedKeys) > 0
+| mv-expand AddedKey = AddedKeys to typeof(string)
+// Microsoft's Defender hunting query for an uncommon credential type reads
+// KeyType=Password (a client secret) and AsymmetricX509Cert (a certificate) from the
+// modified properties of these same activities.
+| parse AddedKey with * "KeyIdentifier=" KeyId:string ",KeyType=" KeyType:string
+        ",KeyUsage=" KeyUsage:string ",DisplayName=" KeyName:string "]" *
+| extend TargetType = tostring(Target.type), TargetName = tostring(Target.displayName),
+         TargetId = tostring(Target.id),
+         ActorUser = tostring(InitiatedBy.user.userPrincipalName),
+         ActorApp = tostring(InitiatedBy.app.displayName),
+         ActorSpId = tostring(InitiatedBy.app.servicePrincipalId)
+// ByApp leaves out a service principal adding a key to itself. On an Application
+// target the ids never match (application object vs service principal), so a
+// self-rotating app still shows ByApp there: allowlist it by name.
+| extend OnServicePrincipal = TargetType == "ServicePrincipal",
+         ByApp = isempty(ActorUser) and isnotempty(ActorSpId) and ActorSpId != TargetId,
+         FirstCredential = array_length(OldKeys) == 0
+// One row per new key, and one change can log two entries (application and service
+// principal): group by CorrelationId.
+| project TimeGenerated, OperationName, TargetType, TargetName, TargetId,
+          Actor = coalesce(ActorUser, ActorApp), ByApp, OnServicePrincipal,
+          FirstCredential, KeyType, KeyUsage, KeyName, KeyId, CorrelationId
+```
+
 ## Tuning and false positives
 
 Baseline each rule in report-only mode before alerting; the scope lists and thresholds are dials, not gospel.
@@ -120,6 +179,7 @@ Baseline each rule in report-only mode before alerting; the scope lists and thre
 - **Rule 1 (sensitive scopes).** Scope strings are noisy - plenty of legitimate apps request `Mail.Read`. Maintain an allowlist of `AppId`s for sanctioned applications and exclude them. Treat `IsAdminConsent == "True"` as the high-severity branch: a tenant-wide grant exposes every user, not just the clicker. Entra writes each `modifiedProperties` `newValue` JSON-quoted, so the query strips the quotes before that comparison, and `Actor` falls back to the app's display name when a service principal made the grant (rule 3 does the same). Validate the `modifiedProperties` field names (`ConsentAction.Permissions`, `ConsentContext.IsAdminConsent`) against your own tenant first, because the shape has changed across schema versions.
 - **Rule 2 (the grant POST).** Your own admins legitimately create grants during app onboarding. Scope this to actors outside your identity and app-admin roles, or correlate the source `IPAddress` against known administrative networks; grants from standard users, or from hosting and proxy ASNs, are the ones to surface.
 - **Rule 3 (app-role assignments).** These should be rare and deliberate. Flag high-value roles by name - `full_access_as_app` (Exchange), `Mail.ReadWrite`, and any `*.ReadWrite.All` - and reconcile every hit against a change ticket. Because the application-permission path generally requires an already-privileged actor, a hit is as much an insider or compromised-admin signal as a phishing one.
+- **Rule 4 (added credentials).** Certificate rotation, CI/CD pipelines and apps that roll their own keys add credentials on a schedule; an application needs no permission to roll its own keys. A SAML app's token signing certificate adds a `Sign` key, a `Verify` key and a password (the certificate's) to its service principal, so allowlist SAML apps as well as those actors and targets. Microsoft's Sentinel rules keep only `Verify` keys; this query keeps every usage. Then triage in this order: `OnServicePrincipal` (the credential went on the service principal, the MITRE escalation case; since June 2026 the app instance property lock that blocks it is on by default for new applications, so a hit deserves a look), `ByApp` (an app or service principal added the credential to a different object), then `FirstCredential` (the object had no key before; Microsoft's own Sentinel rule for this case runs at High severity, against Medium when a key already existed). One change can log two entries, one for the application and one for the service principal, so group by `CorrelationId`. For a stronger signal, join a hit to a `Consent to application` event for the same service principal in the days before it, as Microsoft's "Credential added after admin consented to Application" rule does.
 
 ## Threat hunt
 
@@ -151,11 +211,14 @@ None of this is a silver bullet, and pretending otherwise would be the opposite 
 - **Schema drift is real.** The shape of `modifiedProperties` has changed over time, so a query that works today can silently return nothing after a platform update. Test for regressions.
 - **A missing export is a blind spot.** Detection 2 depends entirely on `MicrosoftGraphActivityLogs` being enabled and exported; if it is not, the highest-fidelity signal never reaches your SIEM. The same applies to `AADServicePrincipalSignInLogs` for the hunt.
 - **App-only grants need privilege.** The application-permission path generally requires an already-privileged actor, so detection 3 is as much an insider or compromised-admin signal as a phishing one.
+- **Persistence is not only keys.** Detection 4 reads the `KeyDescription` property and nothing else. A federated identity credential, which lets tokens from an outside identity provider stand in for a secret, is a separate Graph resource, so it may not show up there.
+- **The phishing app's own keys are out of sight.** An application object, with its secrets and certificates, lives in the tenant where the app was registered, so the keys of a consent-phishing app registered in another tenant never reach your audit log. Detection 4 catches keys added to apps registered in your tenant and to any service principal in it.
+- **The key format is undocumented.** Microsoft Learn does not document the `KeyDescription` value; detection 4 parses it the way Microsoft's own Sentinel rules do. UMBRASEC has not verified that the `Update Service principal` and `Update Application` activities carry `KeyDescription`, or which activity name Entra writes when keys arrive with a new app, so test these paths in your tenant.
 - **This is Microsoft-shaped.** The same consent-phishing pattern exists against Google Workspace and other OAuth providers; the artifacts and queries here are specific to Entra ID.
 
 ## ATT&CK and references
 
-- MITRE ATT&CK: [T1528 Steal Application Access Token](https://attack.mitre.org/techniques/T1528/) (Credential Access).
+- MITRE ATT&CK: [T1528 Steal Application Access Token](https://attack.mitre.org/techniques/T1528/) (Credential Access); [T1098.001 Account Manipulation: Additional Cloud Credentials](https://attack.mitre.org/techniques/T1098/001/) (Persistence, Privilege Escalation) for detection 4.
 - UMBRASEC writeup: [Detecting OAuth Consent Phishing in Microsoft 365](https://umbrasec.dev/research/detecting-oauth-consent-phishing.html) (2026-06-11).
 - Microsoft Entra - [Protect against consent phishing](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/protect-against-consent-phishing).
 - Microsoft Entra - [Configure how users consent to applications](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent).
@@ -164,5 +227,8 @@ None of this is a silver bullet, and pretending otherwise would be the opposite 
 - Microsoft Security Blog - [Midnight Blizzard: Guidance for responders on nation-state attack](https://www.microsoft.com/en-us/security/blog/2024/01/25/midnight-blizzard-guidance-for-responders-on-nation-state-attack/) (Jan 2024).
 - Thomas Naunheim - [Detection and mitigation of illicit consent grant attacks in Azure AD](https://www.cloud-architekt.net/detection-and-mitigation-consent-grant-attacks-azuread/).
 - Practical 365 - [Investigating OAuth app abuse with the Graph Activity Log](https://practical365.com/investigating-oauth-app-abuse-with-the-graph-activity-log/).
+- Microsoft Entra - [Security operations for applications](https://learn.microsoft.com/en-us/entra/architecture/security-operations-applications).
+- Microsoft Entra - [Audit log activities reference](https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-audit-activities).
+- Microsoft Sentinel - [First access credential added to Application or Service Principal](https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/Microsoft%20Entra%20ID/Analytic%20Rules/FirstAppOrServicePrincipalCredential.yaml), [New access credential added to Application or Service Principal](https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/Microsoft%20Entra%20ID/Analytic%20Rules/NewAppOrServicePrincipalCredential.yaml) and [Credential added after admin consented to Application](https://github.com/Azure/Azure-Sentinel/blob/master/Solutions/Microsoft%20Entra%20ID/Analytic%20Rules/CredentialAddedAfterAdminConsent.yaml).
 
 **Scope note.** This is a defensive skill. It explains OAuth consent phishing only to the depth needed to detect and mitigate it and deliberately provides no app-registration templates, phishing kits, or token-abuse tooling. UMBRASEC publishes defense, not offense.
