@@ -103,6 +103,14 @@ class InstallerTests(SandboxTest):
                 self.assertIn("--target needs a value", r.stderr)
                 self.assertFalse((self.sb.root / nxt).exists())
 
+    def test_help_prints_the_whole_usage_block(self) -> None:
+        r = self.sb.install("--help")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        usage = [line for line in r.stdout.splitlines() if line.startswith("  ./install.sh")]
+        self.assertEqual(len(usage), 9, r.stdout)
+        self.assertIn("--dry-run", usage[-1])
+        self.assertNotIn("set -euo", r.stdout)
+
     def test_install_update_and_uninstall(self) -> None:
         t = str(self.sb.target)
         r = self.sb.install("--target", t)
