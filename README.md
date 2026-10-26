@@ -68,10 +68,10 @@ cd umbra-blue
 ./install.sh --tier 1                 # only the sourced Tier 1 skills
 ./install.sh --project                # into ./.claude/skills for one project
 ./install.sh --list                   # categories and counts
-./install.sh --uninstall              # remove every umbra-blue skill
+./install.sh --uninstall              # remove every umbra-blue skill, keep renamed copies
 ```
 
-The installer never overwrites a skill it did not install unless you pass `--force`. To update, `git pull` and run it again: it refreshes the umbra-blue skills and removes any that were renamed or dropped since your last install. Start a new session and Claude loads a matching skill from its triggers: mentioning Kerberoasting or RC4 service tickets loads `detect-kerberoasting`.
+The installer never overwrites a skill it did not install unless you pass `--force`. To update, `git pull` and run it again: it refreshes the umbra-blue skills and removes any that were renamed or dropped since your last install. A copy of a skill you made under another name (`cp -R detect-xss my-copy`) is yours: neither an update nor `--uninstall` removes it, unless you copied it while the original still had the older installer's `.umbra-blue` marker (category only, rewritten by any install since): `--uninstall` still removes such a copy, as it cannot be told apart from the original. Start a new session and Claude loads a matching skill from its triggers: mentioning Kerberoasting or RC4 service tickets loads `detect-kerberoasting`.
 
 ### Claude.ai
 

@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -163,6 +164,32 @@ class InstallerTests(SandboxTest):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertTrue((old / "SKILL.md").exists(), r.stdout)
 
+    def test_uninstall_keeps_a_renamed_copy(self) -> None:
+        t = str(self.sb.target)
+        self.sb.install("--target", t)
+        copy = self.sb.target / "my-detect-one"
+        shutil.copytree(self.sb.target / "detect-one", copy)
+        r = self.sb.install("--target", t, "--uninstall", "--dry-run")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("keep   my-detect-one", r.stdout)
+        self.assertTrue((self.sb.target / "detect-one").exists())
+        r = self.sb.install("--target", t, "--uninstall")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual([p.name for p in self.sb.target.iterdir()], ["my-detect-one"], r.stdout)
+        self.assertIn("Removed 2 umbra-blue skill(s)", r.stdout)
+        self.assertIn("kept 1 renamed copies", r.stdout)
+
+    def test_uninstall_still_removes_a_marker_from_an_older_installer(self) -> None:
+        # Unlike the prune: a category-only marker cannot tell a copy from the original,
+        # and uninstall must still clear what the older installer put there.
+        old = self.sb.target / "detect-one"
+        old.mkdir(parents=True)
+        (old / "SKILL.md").write_text("old", encoding="utf-8")
+        (old / ".umbra-blue").write_text("web\n", encoding="utf-8")
+        r = self.sb.install("--target", str(self.sb.target), "--uninstall")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse(old.exists(), r.stdout)
+
     def test_dry_run_reports_stale_skills_without_removing_them(self) -> None:
         t = str(self.sb.target)
         self.sb.install("--target", t)
@@ -171,6 +198,34 @@ class InstallerTests(SandboxTest):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("would remove", r.stdout)
         self.assertTrue((self.sb.target / "detect-two").exists())
+
+
+class RealTreeUninstallTest(unittest.TestCase):
+    """The real installer and Skills/ tree into a temp HOME, read-only on the repo."""
+
+    def test_uninstall_into_home_keeps_an_edited_renamed_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            env = {**os.environ, "HOME": home}
+            skills = Path(home) / ".claude" / "skills"
+            expected = len(list(REPO.glob("Skills/*/*/SKILL.md")))
+            self.assertGreater(expected, 0)
+
+            def run(*args: str) -> subprocess.CompletedProcess:
+                return subprocess.run(["bash", str(REPO / "install.sh"), *args], cwd=home, env=env, capture_output=True, text=True)
+
+            r = run()
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(len(list(skills.glob("*/SKILL.md"))), expected, r.stdout)
+            copy = skills / "my-copy"
+            shutil.copytree(skills / "detect-xss", copy)
+            with (copy / "SKILL.md").open("a", encoding="utf-8") as f:
+                f.write("\nmy own edit\n")
+            r = run("--uninstall")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual([p.name for p in skills.iterdir()], ["my-copy"], r.stdout)
+            self.assertIn("my own edit", (copy / "SKILL.md").read_text(encoding="utf-8"))
+            self.assertIn(f"Removed {expected} umbra-blue skill(s)", r.stdout)
+            self.assertIn("keep   my-copy (a copy of web/detect-xss", r.stdout)
 
 
 class ValidatorTests(SandboxTest):
