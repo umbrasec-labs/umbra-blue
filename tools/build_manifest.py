@@ -94,7 +94,6 @@ def build_manifest(skills) -> str:
         "version": VERSION,
         "license": "MIT",
         "homepage": HOMEPAGE,
-        "upstream": "https://github.com/SnailSploit/claude-red",
         "categories": {c: cats[c] for c, _, _ in CATEGORIES if c in cats},
         "skills": [{k: s[k] for k in ("name", "category", "path", "tier", "answers", "description", "mapper")} for s in skills],
         "skill_count": len(skills),
