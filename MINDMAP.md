@@ -6,42 +6,134 @@ Every skill in the library, grouped by domain and category. **★** marks Tier 1
 
 **77 skills** · **23 categories** · **10 Tier 1**
 
-[Overview](#overview) · [Tier 1](#tier-1) · [Application](#application) · [Identity & Infrastructure](#identity--infrastructure) · [Cloud & Delivery](#cloud--delivery) · [Devices & Radio](#devices--radio) · [Exploit Engineering](#exploit-engineering) · [Exposure & People](#exposure--people) · [Utility](#utility)
+[Full map](#full-map) · [Tier 1](#tier-1) · [Application](#application) · [Identity & Infrastructure](#identity--infrastructure) · [Cloud & Delivery](#cloud--delivery) · [Devices & Radio](#devices--radio) · [Exploit Engineering](#exploit-engineering) · [Exposure & People](#exposure--people) · [Utility](#utility)
 
-## Overview
+## Full map
+
+Hexagons are domains, rounded nodes are categories, leaves are skills. ★ marks Tier 1.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "ui-monospace, SFMono-Regular, Menlo, monospace",
+  "fontSize": "14px",
+  "cScale0": "#1f2937", "cScaleLabel0": "#f9fafb",
+  "cScale1": "#1d4ed8", "cScaleLabel1": "#ffffff",
+  "cScale2": "#0f766e", "cScaleLabel2": "#ffffff",
+  "cScale3": "#7c3aed", "cScaleLabel3": "#ffffff",
+  "cScale4": "#b45309", "cScaleLabel4": "#ffffff",
+  "cScale5": "#be123c", "cScaleLabel5": "#ffffff",
+  "cScale6": "#4d7c0f", "cScaleLabel6": "#ffffff",
+  "cScale7": "#0369a1", "cScaleLabel7": "#ffffff"
+}}}%%
 mindmap
-  root((umbra-blue<br/>77))
-    Application
-      Web Application 16
-      API Security 2
-      Auth and Identity 2
-      AI Security 2
-    Identity & Infrastructure
-      Active Directory 2
-      Infrastructure and Endpoint 7
-      Network 1
-      Privilege Escalation 2
-      Post-Exploitation 3
-      Forensics and C2 2
-    Cloud & Delivery
-      Cloud 1
-      Container and Kubernetes 2
-      CI/CD and Pipeline 2
-      Supply Chain 2
-    Devices & Radio
-      Wireless 14
-      Mobile 1
-      IoT and Embedded 1
-    Exploit Engineering
-      Exploit Mitigation 5
-      Fuzzing and Vulnerability Triage 2
-      Cryptography 2
-    Exposure & People
-      Exposure Management 2
-      Social Engineering 2
-    Utility 2
+  root((**umbra-blue**<br/>77 skills · 23 categories))
+    {{Application}}
+      (Web Application · 16)
+        ★ detect-litellm-command-injection
+        ★ detect-metabase-sqli
+        defend-open-redirect
+        detect-business-logic-abuse
+        detect-deserialization
+        detect-graphql-abuse
+        detect-hpp
+        detect-idor
+        detect-malicious-upload
+        detect-request-smuggling
+        detect-ssrf
+        detect-ssti
+        detect-web-race-condition
+        detect-xss
+        detect-xxe
+        harden-waf
+      (API Security · 2)
+        detect-api-business-logic-abuse
+        harden-api-security
+      (Auth and Identity · 2)
+        ★ detect-oauth-consent-phishing
+        defend-jwt
+      (AI Security · 2)
+        ★ defend-ai-agents
+        ★ defend-llm-top-10
+    {{Identity & Infrastructure}}
+      (Active Directory · 2)
+        ★ detect-kerberoasting
+        detect-ad-credential-abuse
+      (Infrastructure and Endpoint · 7)
+        detect-edr-evasion
+        detect-initial-access
+        detect-keyloggers
+        detect-redteam-ttps
+        detect-shellcode-injection
+        harden-windows-boundaries
+        verify-windows-mitigations
+      (Network · 1)
+        detect-l2-l3-attacks
+      (Privilege Escalation · 2)
+        detect-linux-privesc
+        detect-windows-privesc
+      (Post-Exploitation · 3)
+        ★ detect-data-exfiltration
+        ★ detect-ncentral-post-exploitation
+        detect-lateral-movement
+      (Forensics and C2 · 2)
+        detect-anti-forensics
+        detect-c2-beaconing
+    {{Cloud & Delivery}}
+      (Cloud · 1)
+        detect-cloud-attack-paths
+      (Container and Kubernetes · 2)
+        detect-container-escape
+        harden-k8s
+      (CI/CD and Pipeline · 2)
+        detect-cicd-secret-exposure
+        harden-cicd-pipeline
+      (Supply Chain · 2)
+        ★ detect-supply-chain-compromise
+        detect-dependency-confusion
+    {{Devices & Radio}}
+      (Wireless · 14)
+        detect-deauth
+        detect-rogue-ap
+        detect-wifi-attacks
+        detect-wifi-recon
+        harden-ble
+        harden-bluetooth-classic
+        harden-lorawan-sub-ghz
+        harden-wpa-enterprise
+        harden-wpa2
+        harden-wpa3
+        harden-wps
+        harden-z-wave
+        harden-zigbee-thread-matter
+        patch-krack-fragattacks
+      (Mobile · 1)
+        harden-mobile-apps
+      (IoT and Embedded · 1)
+        harden-iot
+    {{Exploit Engineering}}
+      (Exploit Mitigation · 5)
+        defend-exploit-mitigations
+        defend-memory-corruption
+        detect-toctou-races
+        triage-crashes-defensively
+        verify-exploit-mitigations
+      (Fuzzing and Vulnerability Triage · 2)
+        integrate-fuzzing-sdlc
+        triage-vuln-classes
+      (Cryptography · 2)
+        harden-crypto-implementations
+        harden-tls
+    {{Exposure & People}}
+      (Exposure Management · 2)
+        ★ monitor-external-attack-surface
+        reduce-osint-exposure
+      (Social Engineering · 2)
+        defend-social-engineering
+        detect-phishing
+    {{Utility}}
+      (Utility · 2)
+        defensive-fast-triage
+        defensive-reporting
 ```
 
 ## Tier 1
