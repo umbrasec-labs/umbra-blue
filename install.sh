@@ -6,8 +6,8 @@
 # deep, so this script flattens Skills/<category>/<skill>/ into
 # <target>/<skill>/. Each installed skill gets a .umbra-blue marker so that
 # updates and uninstall only ever touch umbra-blue's own folders. An install
-# also removes skills it installed that are no longer in this checkout of
-# umbra-blue (the marker names the skill, so a renamed copy is never removed).
+# also removes skills it installed that are no longer in this checkout (the
+# marker names the skill, so a renamed copy is never removed, nor on uninstall).
 #
 # Usage:
 #   ./install.sh                         # all skills into ~/.claude/skills
@@ -16,7 +16,7 @@
 #   ./install.sh --category web          # one category only (repeatable)
 #   ./install.sh --tier 1                # only Tier 1 (sourced) skills
 #   ./install.sh --force                 # overwrite same-named skills not installed by umbra-blue
-#   ./install.sh --uninstall             # remove every umbra-blue skill from the target
+#   ./install.sh --uninstall             # remove every umbra-blue skill, keep renamed copies
 #   ./install.sh --list                  # list categories and counts
 #   ./install.sh --dry-run               # show what would happen
 
@@ -61,6 +61,20 @@ skill_tier() {
   if head -c 3000 "$1" | grep -qF "$TIER2_MARK"; then echo 2; else echo 1; fi
 }
 
+# What a marker says about the folder that holds it. The marker records
+# <category>/<skill>: "own" when that skill is this folder, "copy" when it names
+# another folder (the user copied a skill under a new name, cp -R carries the
+# marker along), "legacy" for a marker from the older installer (category only).
+marker_kind() {
+  local first
+  first="$(head -n 1 "$1")"
+  case "$first" in
+    */"$2") echo own ;;
+    */*)    echo copy ;;
+    *)      echo legacy ;;
+  esac
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --target)    need_value "$@"; TARGET="$2"; shift 2 ;;
@@ -80,15 +94,22 @@ done
 if [ "$LIST_ONLY" -eq 1 ]; then list_categories; exit 0; fi
 case "$TIER" in ""|1|2) ;; *) echo "Error: --tier must be 1 or 2" >&2; exit 1 ;; esac
 
+# Uninstall removes a folder whose marker names that same folder, as the prune does, and
+# keeps a renamed copy. A legacy marker cannot tell a copy from the original, so it is
+# removed, as the older installer would have done.
 if [ "$UNINSTALL" -eq 1 ]; then
-  removed=0
+  removed=0; kept=0
   for marker in "$TARGET"/*/"$MARKER"; do
     [ -f "$marker" ] || continue
     dir="$(dirname "$marker")"
+    if [ "$(marker_kind "$marker" "$(basename "$dir")")" = copy ]; then
+      echo "keep   $(basename "$dir") (a copy of $(head -n 1 "$marker") under another name)"
+      kept=$((kept + 1)); continue
+    fi
     if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] would remove $dir"; else rm -rf -- "$dir"; fi
     removed=$((removed + 1))
   done
-  echo "Removed $removed umbra-blue skill(s) from $TARGET"
+  echo "Removed $removed umbra-blue skill(s) from $TARGET, kept $kept renamed copies"
   exit 0
 fi
 
@@ -132,7 +153,7 @@ for marker in "$TARGET"/*/"$MARKER"; do
   [ -f "$marker" ] || continue
   dir="$(dirname "$marker")"
   name="$(basename "$dir")"
-  case "$(head -n 1 "$marker")" in */"$name") ;; *) continue ;; esac
+  [ "$(marker_kind "$marker" "$name")" = own ] || continue
   found=0
   for d in "$SKILLS_DIR"/*/"$name"/; do [ -f "$d/SKILL.md" ] && { found=1; break; }; done
   [ "$found" -eq 1 ] && continue
