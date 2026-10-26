@@ -7,7 +7,8 @@
 # <target>/<skill>/. Each installed skill gets a .umbra-blue marker so that
 # updates and uninstall only ever touch umbra-blue's own folders. An install
 # also removes skills it installed that are no longer in this checkout (the
-# marker names the skill, so a renamed copy is never removed, nor on uninstall).
+# marker names the skill, so a renamed copy is never removed, nor on uninstall,
+# unless it still carries a category-only marker from the older installer).
 #
 # Usage:
 #   ./install.sh                         # all skills into ~/.claude/skills
