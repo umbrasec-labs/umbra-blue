@@ -7,6 +7,7 @@ All notable changes to `umbra-blue` are documented here. Versions follow [Semant
 ### Added
 
 - **Blue Team Mapper links.** Every skill now links to its page in the [Blue Team Mapper](https://umbrasec-labs.github.io/BlueTeamMapper/), which shows the skill's techniques and any UMBRASEC rules for them. For techniques in the mapper matrix, the page also shows the matrix rows, the response flow chains, and the reader's own coverage. The link appears in a new Mapper column in the README skill index and in `COVERAGE.md`, and as a `mapper` URL field on each skill in `claude-skills.json`. `tools/build_manifest.py` generates all three from one base URL.
+- **Metabase burst rule and egress query.** `detect-metabase-sqli` now inlines two new sigma-pack files byte for byte. `metabase-reset-password-burst.yml` is a Sigma `event_count` correlation: ten or more requests to `/api/session/reset_password` from one client address in ten minutes, the writeup's own dial. It reads no payload, so it also counts an exploit carried in the POST body, the gap the request-line markers rule cannot close. `metabase-egress-inversion.kql` reads firewall logs in `CommonSecurityLog` and flags a day of outbound bytes from the Metabase host at a multiple of its own 14-day median ([T1567](https://attack.mitre.org/techniques/T1567/)). The two prose hunts they replace now cover what the rules cannot (slower sources, extraction split across days), and the skill adds tuning and limitations for both, including the undocumented byte direction of `SentBytes` and `ReceivedBytes`.
 
 ### Changed
 
