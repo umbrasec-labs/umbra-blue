@@ -37,7 +37,8 @@ UNINSTALL=0
 LIST_ONLY=0
 
 usage() {
-  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+  # The header comment, up to the first blank line.
+  sed -n '2,/^$/{/^#/p;}' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
