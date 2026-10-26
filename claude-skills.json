@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "license": "MIT",
   "homepage": "https://github.com/umbrasec-labs/umbra-blue",
-  "upstream": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "web": [
       "defend-open-redirect",
