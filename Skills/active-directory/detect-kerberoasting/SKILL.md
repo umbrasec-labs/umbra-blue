@@ -31,7 +31,7 @@ Fields you will lean on in each 4769 event:
 |---|---|
 | `TicketEncryptionType` | `0x17` = RC4, the downgrade signal. `0x12` = AES-256, `0x11` = AES-128. |
 | `ServiceName` / `ServiceSid` | The account whose ticket was requested, the roast target. Names ending in `$` are computer accounts, usually benign. |
-| `TargetUserName` | The principal that made the request, the account you would investigate. |
+| `TargetUserName` | The principal that made the request, the account you would investigate. Windows writes it as `name@REALM`, so a computer account shows as `HOST$@REALM`. |
 | `TicketOptions` | Roasting tools often produce recognizable flags, commonly `0x40810000`, but this varies and should not be relied on alone. |
 | `Status` | `0x0` = the ticket was issued successfully. |
 
@@ -99,10 +99,12 @@ description: >
     window - consistent with bulk Kerberoasting enumeration.
 references:
     - https://attack.mitre.org/techniques/T1558/003/
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4769
+    - https://github.com/mdecrevoisier/EVTX-to-MITRE-Attack
     - https://umbrasec.dev/research/detecting-kerberoasting.html
 author: UMBRASEC
 date: 2026-06-10
-modified: 2026-10-25
+modified: 2026-10-29
 tags:
     - attack.credential-access
     - attack.t1558.003
@@ -131,9 +133,21 @@ detection:
     selection:
         EventID: 4769
         Status: '0x0'
+    # Requests from computer accounts. Windows writes the requester as
+    # name@REALM, so a computer account shows as HOST$@REALM (Microsoft's
+    # event 4769 reference, and the public EVTX-to-MITRE-Attack samples);
+    # the bare $ ending is kept for sensors that strip the realm.
     filter_machine:
-        TargetUserName|endswith: '$'
-    condition: selection and not filter_machine
+        - TargetUserName|endswith: '$'
+        - TargetUserName|contains: '$@'
+    # Tickets for computer accounts and krbtgt, the same filters as the RC4
+    # rule: a burst of host tickets (BloodHound host enumeration in the
+    # EVTX-to-MITRE-Attack samples) is not Kerberoasting of service accounts.
+    filter_machine_service:
+        ServiceName|endswith: '$'
+    filter_krbtgt:
+        ServiceName: 'krbtgt'
+    condition: selection and not 1 of filter_*
 ```
 
 ### 3. The honeypot SPN (near-zero false positives)
@@ -174,6 +188,7 @@ level: high
 ## Tuning and false positives
 
 - **Rule 1 (`TicketOptions`).** The rule ships with the `TicketOptions: '0x40810000'` line commented out. Enabled, it tightens precision but misses tools that vary their flags. Start without it to measure your baseline of RC4 requests, identify the legitimate RC4-only accounts, add those to `filter_machine` as an allowlist, then decide whether the `TicketOptions` constraint earns its keep.
+- **Rule 2 (what it counts).** The base rule drops requests from computer accounts (`HOST$@REALM`, or `HOST$` where a sensor strips the realm) and tickets for computer accounts and `krbtgt`, like rule 1. A burst of host tickets, such as BloodHound host enumeration in the public EVTX-to-MITRE-Attack samples, therefore does not count toward the threshold.
 - **Rule 2 (threshold and window).** `gte: 15` over `5m` are starting points. Run it in report-only mode for a week, look at your top talkers - vulnerability scanners and monitoring accounts will appear, allowlist them - and set the threshold above your noisiest legitimate account.
 - **Rule 3 (honeypot).** Replace `svc-honeypot-sql` with your decoy's `sAMAccountName`. A hit should be near-binary; the only benign cause is a scanner pointed at the decoy, which is still worth investigating.
 
