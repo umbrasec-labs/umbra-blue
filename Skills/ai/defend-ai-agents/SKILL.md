@@ -428,8 +428,28 @@ description: >
     Claude Code's shell-snapshots/snapshot- file, matched with / or \
     separators. The Claude Code wrapper is a local observation of Claude Code
     2.1.310 on Linux, not a documented interface, and can change in any
-    release. Three more wrapper strings are read in shipped code: the Copilot
-    CLI's PowerShell wrapper variable __copilotCommandFinished;
+    release. With Claude Code's sandbox on (Linux, bubblewrap), each command
+    also starts two wrapper rows: /bin/sh -c bwrap --new-session
+    --die-with-parent ... under the claude binary, and bwrap --new-session
+    --die-with-parent ... under that shell. Their command lines list the
+    paths the sandbox masks, which follow its deny-read settings; in the
+    capture that list named .git-credentials, a string the rule lists, so
+    they fired on any command, even uname -s. They also name curl, in
+    CURL_CA_BUNDLE, which alone does not fire the rule. The rule drops a row
+    whose command line starts with either form and also sets SANDBOX_RUNTIME 1, the
+    sandbox runtime's own marker, so another sandbox that starts bwrap with
+    the same flags is not dropped. The command itself still reaches the rule
+    on the inner shell row, which carries the shell-snapshots wrapper and the
+    command text, and on the outer zsh row that starts the sandbox's socat
+    proxies and then the inner shell, which carries the same text. Both shapes
+    are a local observation of Claude Code 2.1.312 on Linux (a strace capture,
+    not a sensor). A command that itself starts with bwrap --new-session
+    --die-with-parent and sets SANDBOX_RUNTIME 1 is dropped on that row as
+    well. On macOS the sandbox uses another wrapper, sandbox-exec; its rows
+    were not captured, so whether they fire the same way is a guess, and this
+    filter does not drop them. Three more wrapper strings are read in shipped
+    code: the Copilot CLI's PowerShell wrapper variable
+    __copilotCommandFinished;
     CURSOR_STATE_INPUT_FILE, from the Cursor wrapper on Windows Git Bash,
     where the command follows -- on the same line; and
     WINDSURF_STATE_MISSING=0, from the legacy Windsurf Cascade dedicated
@@ -536,7 +556,7 @@ references:
     - https://umbrasec.dev/research/detecting-hijacked-ai-coding-agents.html
 author: UMBRASEC
 date: 2026-10-26
-modified: 2026-10-27
+modified: 2026-10-29
 tags:
     - attack.execution
     - attack.t1059
@@ -618,8 +638,15 @@ detection:
         - CommandLine|contains|all:
               - '/proc/'
               - "/environ)"
-        - CommandLine|contains: '/proc/'
-          CommandLine|endswith: '/environ'
+    # /proc/ with /environ at the end of the line is split into proc_any and
+    # environ_end, joined in the condition: Chainsaw cannot load a detection
+    # map that names one field twice (CommandLine|contains and
+    # CommandLine|endswith). Neither name starts with risk_, so 1 of risk_*
+    # does not pick one up alone.
+    proc_any:
+        CommandLine|contains: '/proc/'
+    environ_end:
+        CommandLine|endswith: '/environ'
     risk_substitution:
         CommandLine|contains:
             - '-c "$(curl'
@@ -728,7 +755,16 @@ detection:
               - "|zsh"
               - "| sudo sh"
               - "| sudo bash"
-    condition: (1 of agent_* or (copilot_parent and not filter_ms_copilot_app)) and (1 of risk_* or (dl_tool and dl_exec))
+    # Claude Code's Linux sandbox wrapper rows (see the description): the
+    # command reaches the rule on the inner shell row instead. Two selections
+    # joined in the condition, not one map, so Chainsaw can load the rule.
+    filter_claude_sandbox_wrapper:
+        CommandLine|startswith:
+            - 'bwrap --new-session --die-with-parent'
+            - '/bin/sh -c bwrap --new-session --die-with-parent'
+    filter_claude_sandbox_runtime:
+        CommandLine|contains: '--setenv SANDBOX_RUNTIME 1'
+    condition: (1 of agent_* or (copilot_parent and not filter_ms_copilot_app)) and (1 of risk_* or (proc_any and environ_end) or (dl_tool and dl_exec)) and not (filter_claude_sandbox_wrapper and filter_claude_sandbox_runtime)
 falsepositives:
     - Commands that create, use or print an SSH key under .ssh, such as
       ssh-keygen -f ~/.ssh/id_ed25519, ssh -i with a key file, or reading a
@@ -921,7 +957,7 @@ union CredentialReads, Pairs
 - **Rule 1 (capability profile).** Only as good as the profile. Keep profiles tight and per-task, not per-product: a triage bot that can read tickets does not need a send-email tool "just in case." If a profile needs widening often, that is a design smell worth a second look, not a reason to loosen the rule.
 - **Rule 2 (trifecta).** The benign trip is a legitimate agent that reads external content and then genuinely must act on it (a monitoring bot that reads a status page and posts to a channel). Allowlist the destination and the specific tool pairing per task, not globally, so the general pattern stays armed.
 - **Rule 3 (autonomy).** Run it report-only for a couple of weeks like any SIEM correlation rule, find your noisy legitimate automations (batch jobs, scheduled summarizers), allowlist them, and set thresholds above your noisiest honest task. The thresholds `N`, `K`, and `R` are dials, not gospel.
-- **Endpoint rules (section 4).** The headless rule fires on CI runners and sandboxes that run agents with approvals off by design: scope it by host group rather than dropping a flag. The shell rule fires on vendor `curl | sh` installers the developer asked for, and on an agent's own hook, status-line or MCP server command that calls `gh auth token` on every run: allowlist the exact command per repository or host group. The terminal hunt pairs any download with any interpreter in the window, such as `curl` then `python -m pytest`.
+- **Endpoint rules (section 4).** The headless rule fires on CI runners and sandboxes that run agents with approvals off by design: scope it by host group rather than dropping a flag. The shell rule fires on vendor `curl | sh` installers the developer asked for, and on an agent's own hook, status-line or MCP server command that calls `gh auth token` on every run: allowlist the exact command per repository or host group. With Claude Code's Linux sandbox (bubblewrap) on, each command adds two wrapper rows that list the paths the sandbox masks, so when its deny-read settings name a listed credential path such as `~/.git-credentials` they match every command; the shell rule drops them (they start with `bwrap --new-session --die-with-parent` and set `SANDBOX_RUNTIME 1`) and still matches the command on the inner shell row. The macOS sandbox wrapper, `sandbox-exec`, is not captured, so check for similar rows there before alerting. The terminal hunt pairs any download with any interpreter in the window, such as `curl` then `python -m pytest`.
 
 ## Threat hunt
 
