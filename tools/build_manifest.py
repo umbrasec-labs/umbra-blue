@@ -34,7 +34,7 @@ def mapper_url(name: str) -> str:
 CATEGORIES = [
     ("web", "Web Application", "Detection and hardening for the OWASP Top 10 and advanced web vulnerability classes"),
     ("auth", "Auth & Identity", "JWT validation hardening, OAuth and OIDC consent-grant detection"),
-    ("active-directory", "Active Directory", "Kerberoasting, AS-REP roasting, DCSync, and ACL abuse detection"),
+    ("active-directory", "Active Directory", "Kerberoasting, AS-REP roasting, DCSync, ACL abuse, and NetExec spraying and remote execution detection"),
     ("wireless", "Wireless", "802.11, WPA2/3, EAP, WPS, BLE, Zigbee, Z-Wave, LoRa, and sub-GHz detection and hardening"),
     ("cloud", "Cloud", "Control-plane and IAM attack-path detection across AWS, Azure, and GCP"),
     ("mobile", "Mobile", "Android and iOS application hardening"),

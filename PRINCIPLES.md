@@ -4,7 +4,7 @@ Every skill in this library follows these rules. The validator enforces the ones
 
 ## Two tiers
 
-umbra-blue mirrors nearly every claude-red skill (78 of 79), so it ships in two clearly labeled tiers. The tier is visible in each skill before a reader trusts it.
+umbra-blue mirrors every claude-red skill (79 of 79), so it ships in two clearly labeled tiers. The tier is visible in each skill before a reader trusts it.
 
 - **Tier 1, sourced.** Derived from a published UMBRASEC writeup or tool, ships a runnable detection or hunt inline (any rule is reused from the UMBRASEC sigma-pack byte for byte), and ties every claim to a primary source. Rules 1 to 9 below apply in full.
 - **Tier 2, methodology.** Gives the defender's method, the log sources and signals, the hunt, and the hardening, but ships **no** bespoke rule. It says so in a banner at the top, points to public rule sources such as SigmaHQ by URL, and never fabricates a rule or claims UMBRASEC authored one. A Tier 2 skill is promoted to Tier 1 when its writeup and rule land; [COVERAGE.md](COVERAGE.md) tracks that.

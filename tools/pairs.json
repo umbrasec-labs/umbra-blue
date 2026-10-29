@@ -4,13 +4,7 @@
     "name": "claude-red",
     "url": "https://github.com/SnailSploit/claude-red",
     "skill_count": 79,
-    "unanswered": [
-      {
-        "red": "offensive-netexec",
-        "category": "active-directory",
-        "needs": "SMB, WinRM and LDAP password spraying, pass-the-hash, remote execution, share and user enumeration, and credential dumping (SAM, LSA, LSASS, NTDS)"
-      }
-    ]
+    "unanswered": []
   },
   "pairs": [
     {
@@ -24,6 +18,12 @@
       "category": "active-directory",
       "blue": "detect-ad-credential-abuse",
       "focus": "ASREProast, DCSync, ACL and delegation abuse, MDI alerts"
+    },
+    {
+      "red": "offensive-netexec",
+      "category": "active-directory",
+      "blue": "detect-netexec",
+      "focus": "NetExec smbexec, atexec, wmiexec templates, NTLM fan-out, MDI alerts"
     },
     {
       "red": "offensive-ai-security",

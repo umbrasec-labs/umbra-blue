@@ -28,7 +28,8 @@
     ],
     "active-directory": [
       "detect-ad-credential-abuse",
-      "detect-kerberoasting"
+      "detect-kerberoasting",
+      "detect-netexec"
     ],
     "wireless": [
       "detect-deauth",
@@ -150,6 +151,17 @@
       ],
       "description": "Detection and response methodology for Kerberoasting in Active Directory (MITRE ATT&CK T1558.003, Credential Access). Covers the RC4 service-ticket downgrade signal, SPN request fan-out, and the honeypot-SPN tripwire - three layered Sigma detections keyed off Windows Security Event ID 4769 on domain controllers, each with tuning, false-positive notes, and gMSA/AES mitigations. Use when investigating suspicious Kerberos service-ticket activity, writing or reviewing Kerberoasting detections, hunting for SPN enumeration, triaging 4769 alerts, or hardening service accounts against offline password cracking.",
       "mapper": "https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-kerberoasting"
+    },
+    {
+      "name": "detect-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/detect-netexec/SKILL.md",
+      "tier": 2,
+      "answers": [
+        "offensive-netexec"
+      ],
+      "description": "Detection and triage methodology for NetExec (nxc), the maintained successor of CrackMapExec, in Windows and Active Directory estates. Covers SMB password spraying and pass-the-hash (MITRE ATT&CK T1110.003, T1550.002), remote execution through its four SMB methods - WMI, MMC DCOM, Task Scheduler and a temporary service (T1021.002, T1047, T1021.003, T1053.005, T1569.002) - and SAM, LSA, LSASS and NTDS credential theft (T1003). Keyed to NetExec's own service, task and command templates in Windows System 7045, Security 4698 and process creation (4688 or Sysmon 1), plus Defender XDR and SecurityEvent hunts, the SigmaHQ rules and the Defender for Identity alerts to run beside them. Use when triaging nxc or CrackMapExec activity, a burst of 4625 or type 3 NTLM logons from one host, a random-named service or root scheduled task created remotely, WmiPrvSE or services.exe spawning cmd.exe, or when checking whether older CrackMapExec and Impacket rules still fire on NetExec.",
+      "mapper": "https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-netexec"
     },
     {
       "name": "defend-ai-agents",
@@ -980,10 +992,10 @@
       "mapper": "https://umbrasec-labs.github.io/BlueTeamMapper/skills/patch-krack-fragattacks"
     }
   ],
-  "skill_count": 77,
+  "skill_count": 78,
   "category_count": 23,
   "tier_counts": {
     "1": 10,
-    "2": 67
+    "2": 68
   }
 }

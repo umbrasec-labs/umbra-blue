@@ -8,10 +8,10 @@
 
 <!-- badges:start -->
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-77-1d4ed8.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-78-1d4ed8.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-0f172a.svg)](#categories)
 [![Tier 1](https://img.shields.io/badge/tier_1-10-38bdf8.svg)](#two-tiers)
-[![Tier 2](https://img.shields.io/badge/tier_2-67-64748b.svg)](#two-tiers)
+[![Tier 2](https://img.shields.io/badge/tier_2-68-64748b.svg)](#two-tiers)
 [![Stars](https://img.shields.io/github/stars/umbrasec-labs/umbra-blue?style=social)](https://github.com/umbrasec-labs/umbra-blue)
 <!-- badges:end -->
 
@@ -23,7 +23,7 @@
 
 ## Overview
 
-`umbra-blue` is a library of defensive security skills for the [Claude Skills system](https://code.claude.com/docs/en/skills). It is the blue team counterpart to [claude-red](https://github.com/SnailSploit/claude-red): 78 of claude-red's 79 offensive skills are paired with the defensive skill that answers them, in the same category folder. The one gap, `offensive-netexec`, needs a new skill and is listed in [COVERAGE.md](COVERAGE.md). Where claude-red teaches Claude how a technique is executed, umbra-blue teaches Claude how to see it, hunt it, and shut it down.
+`umbra-blue` is a library of defensive security skills for the [Claude Skills system](https://code.claude.com/docs/en/skills). It is the blue team counterpart to [claude-red](https://github.com/SnailSploit/claude-red): all 79 of claude-red's offensive skills are paired with the defensive skill that answers them, in the same category folder. Where claude-red teaches Claude how a technique is executed, umbra-blue teaches Claude how to see it, hunt it, and shut it down.
 
 Each skill is a structured `SKILL.md` that primes Claude with detection, hunting, and hardening methodology for one threat: the log sources and event IDs that carry the signal, what to alert on, how to tune out false positives, how to hunt for the quiet variant, and which controls shrink the attack surface, mapped to MITRE ATT&CK and D3FEND. Skills load on demand from their description triggers, so you only pay context for the skill you need.
 
@@ -85,7 +85,7 @@ Paste the contents of a `SKILL.md` into a system prompt or project instructions.
 
 ## Two tiers
 
-umbra-blue mirrors nearly all of claude-red (78 of its 79 skills), so it ships in two clearly labeled tiers. The tier is visible at the top of every skill before you trust it.
+umbra-blue mirrors all 79 claude-red skills, so it ships in two clearly labeled tiers. The tier is visible at the top of every skill before you trust it.
 
 | Tier | What you get |
 |---|---|
@@ -105,7 +105,7 @@ The category folders match claude-red's, so each offensive skill and its defensi
 |---|---:|---:|---|
 | [Web Application](#web-application) | 16 | 2 | Detection and hardening for the OWASP Top 10 and advanced web vulnerability classes |
 | [Auth & Identity](#auth--identity) | 2 | 1 | JWT validation hardening, OAuth and OIDC consent-grant detection |
-| [Active Directory](#active-directory) | 2 | 1 | Kerberoasting, AS-REP roasting, DCSync, and ACL abuse detection |
+| [Active Directory](#active-directory) | 3 | 1 | Kerberoasting, AS-REP roasting, DCSync, ACL abuse, and NetExec spraying and remote execution detection |
 | [Wireless](#wireless) | 14 | 0 | 802.11, WPA2/3, EAP, WPS, BLE, Zigbee, Z-Wave, LoRa, and sub-GHz detection and hardening |
 | [Cloud](#cloud) | 1 | 0 | Control-plane and IAM attack-path detection across AWS, Azure, and GCP |
 | [Mobile](#mobile) | 1 | 0 | Android and iOS application hardening |
@@ -175,6 +175,7 @@ Tier 1 skills are listed first in each category. The full red-to-blue pairing is
 |---|:-:|---|---|:-:|
 | [`detect-kerberoasting`](Skills/active-directory/detect-kerberoasting/SKILL.md) | 1 | `offensive-active-directory` | RC4 service-ticket downgrade, SPN fan-out, honeypot SPN via Event 4769 | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-kerberoasting) |
 | [`detect-ad-credential-abuse`](Skills/active-directory/detect-ad-credential-abuse/SKILL.md) | 2 | `offensive-active-directory` | ASREProast, DCSync, ACL and delegation abuse, MDI alerts | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-ad-credential-abuse) |
+| [`detect-netexec`](Skills/active-directory/detect-netexec/SKILL.md) | 2 | `offensive-netexec` | NetExec smbexec, atexec, wmiexec templates, NTLM fan-out, MDI alerts | [map](https://umbrasec-labs.github.io/BlueTeamMapper/skills/detect-netexec) |
 
 ### Wireless
 
@@ -380,7 +381,7 @@ Tier 1 skills are listed first in each category. The full red-to-blue pairing is
 
 | Phase | Focus | Status |
 |---|---|---|
-| 1 | Full mirror of claude-red, one defensive skill per offensive skill | In progress (78 of 79; `offensive-netexec` needs a skill) |
+| 1 | Full mirror of claude-red, one defensive skill per offensive skill | Done (79 of 79) |
 | 2 | Validator, manifest generator, and rule sync tool, with generated files and sigma-pack drift checked in CI | Complete |
 | 3 | Promote Tier 2 skills to Tier 1 as UMBRASEC writeups and rules land, starting with identity, cloud, and web | In progress |
 | 4 | Claude Code plugin marketplace packaging | Planned |
