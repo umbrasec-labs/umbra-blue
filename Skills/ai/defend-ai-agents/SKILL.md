@@ -793,31 +793,104 @@ falsepositives:
 level: high
 ```
 
-**Hunt: risky command in the VS Code terminal.** Some agents (GitHub Copilot in VS Code under its Local harness, Cline, Roo Code's terminal mode) type their commands into the editor's integrated terminal, where they look exactly like a person's. This Defender XDR hunt reads the terminal shells VS Code opens on Windows, and the shells started by `copilot-runtime` (the Copilot harness, the default in VS Code 1.143, read in VS Code source and the shipped SDK, not captured), with a `Source` column naming which. It flags a credential read, or a download followed by an interpreter in the same shell within 60 seconds. It is a hunt, not an alert: it cannot tell an agent from the human at the keyboard.
+**Hunt: risky command in an agent shell or the VS Code terminal.** Some agents keep one shell for many commands, hand the shell each command on a file descriptor (Cursor on macOS and Linux), or type into the editor's integrated terminal (GitHub Copilot in VS Code under its Local harness, Cline, Roo Code's terminal mode), where they look exactly like a person's. So the shell's own command line, which the shell rule reads, can show little. This Defender XDR hunt reads one level further down: the programs started by the shells of Cursor, the Copilot CLI, Claude Code, Gemini CLI, Kilo Code, the legacy Windsurf terminal, Codex and Amazon Q (found by the shell rule's wrapper strings, read from the child, or by the shell's parent), by Cursor's default PowerShell executor on Windows, by `copilot-runtime` (the Copilot harness, the default in VS Code 1.143, read in VS Code source and the shipped SDK, not captured) and by the terminal shells VS Code opens on Windows, with a `Source` column naming which. It flags a credential read, or a download followed by an interpreter in the same shell within 60 seconds. It is a hunt, not an alert: in a terminal it cannot tell an agent from the human at the keyboard, and every agent source rests on shipped code, vendor docs, user reports or, for Claude Code, a local observation, and none on a sensor capture.
 
 ```kql
-// editor-terminal-risky-command.kql (canonical copy: https://umbrasec.dev/tools/sigma-pack/)
-// UMBRASEC sigma-pack - AI coding agent in the editor terminal: credential read, or download then interpreter (T1059 / T1552.001 / T1105)
-// A command in a VS Code terminal or a Copilot harness shell named a credential source, or one such shell ran a download and then an interpreter
+// all-agent-shells-risky-command.kql (canonical copy: https://umbrasec.dev/tools/sigma-pack/)
+// UMBRASEC sigma-pack - AI coding agent shells and the editor terminal: credential read, or download then interpreter (T1059 / T1552.001 / T1105)
+// A program started by an AI coding agent's shell or a VS Code terminal named a credential source, or one such shell ran a download and then an interpreter
 // Source writeup: https://umbrasec.dev/research/detecting-hijacked-ai-coding-agents.html
-// GitHub Copilot in VS Code under its Local harness, Cline's default mode and Roo Code's
-// terminal mode type their commands into the editor's integrated terminal (a hidden one
-// for the Local harness). Only the programs that shell starts become processes, under a
-// shell that looks the same as one a person opened. Copilot's default Copilot harness
-// runs its commands in a shell of its own instead (see Copilot harness below).
+// Every row is a child of the process a Source names, which is meant to be a shell: a
+// program that shell started. The pack's Sigma rule ai-agent-shell-risky-command reads
+// the shell's own command line; this query reads one level further down, so it also sees
+// agents that keep one shell for many commands, hide the command from the shell's command
+// line, or type into an editor terminal. GitHub Copilot in VS Code under its Local
+// harness, Cline's default mode and Roo Code's terminal mode type their commands into the
+// editor's integrated terminal (a hidden one for the Local harness). Only the programs
+// that shell starts become processes, under a shell that looks the same as one a person
+// opened.
+// The query does not check that this process is a shell. Under a Source keyed on the
+// shell's parent name alone (claude-code by claude.exe, kilo-code by kilo, codex,
+// amazon-q, copilot-harness), the children of any other program the agent starts
+// directly, such as an MCP server, a hook or another helper, are kept and labelled as
+// that agent too (inferred).
 // This is a hunt, not an alert: it cannot separate an agent from the human at the
-// keyboard.
-// What it does: it reads DeviceProcessEvents and keeps the children of a terminal
-// shell whose parent is the editor (Editors, matched on the bare name, because Defender
-// gives a child's grandparent as a file name only) and whose own command line loads
-// VS Code's shell-integration script (ShellIntegrationMarkers, matched as whole terms:
-// shellIntegration.ps1 for PowerShell, shellIntegration-bash.sh after --init-file for
-// bash). It also keeps the children of a shell whose parent is copilot-runtime
-// (RuntimeNames, bare names as well), with no shell-integration condition. The query
-// does not check that this parent is a shell, so children of a hook or other helper the
-// runtime starts are kept too (inferred). The Source column names the source:
-// vscode-terminal or copilot-harness. Then one of two branches, named in the Branch
-// column.
+// keyboard of a terminal, and every agent source below rests on vendor docs, shipped
+// code, user reports or, for Claude Code, a local observation, and none on a sensor
+// capture.
+// What it does: it reads DeviceProcessEvents and names each row's Source from the shell
+// that started it, the row's parent: from wrapper text an agent writes onto that shell's
+// command line (InitiatingProcessCommandLine), or from the shell's own parent, which
+// Defender gives a child only as a bare file name (InitiatingProcessParentFileName). A
+// row gets the first Source that matches, in the order below, so no row is given two
+// Sources; a row that matches none is dropped. Wrapper strings are matched as substrings,
+// in any case (contains), as the Sigma rule's contains does; has_any would split them
+// into terms and match more loosely.
+// Source cursor: the shell's command line holds dump_bash_state, builtin eval -- "$snap",
+// the zsh head builtin unalias -m '*' 2>/dev/null || true, or CURSOR_STATE_INPUT_FILE:
+// the Cursor strings of ai-agent-shell-risky-command, read in shipped code (Cursor CLI
+// 2026.10.22-27dcf5f, Cursor 3.27.14), with the * written plainly where Sigma escapes it.
+// They cover the Cursor CLI and the Cursor IDE agent, whose shells' parent is node or an
+// extension host, names too common to key on. Or the shell's command line holds
+// \ps-script- and .ps1 and its parent is node.exe or Cursor.exe (CursorHosts): the
+// default Cursor executor on Windows runs PowerShell -File on a temporary
+// ps-script-<uuid>.ps1 (read in shipped code; Cursor.exe as the extension host's name is
+// seen in user reports). The Sigma rule cannot use that line, because it names only the
+// script; here the native programs the script starts are the shell's children and are
+// seen (inferred), though its cmdlets are not. For cursor rows the shell's command line
+// is the wrapper and the command came in on a file descriptor, so read
+// ProcessCommandLine to see what ran.
+// Source copilot-harness: the children of a shell whose parent is copilot-runtime
+// (RuntimeNames, bare names as well), with no shell-integration condition. It is checked
+// before copilot-cli: the Copilot CLI's wrapper text lives in the shared Copilot runtime
+// library that copilot-runtime loads too (read in shipped code), so a copilot-runtime
+// shell that carries it is labelled copilot-harness, not copilot-cli.
+// Source copilot-cli: the shell's command line holds __copilotCommandFinished (read in
+// shipped code), or the shell's parent is copilot or copilot.exe (CopilotCliNames) and
+// the shell has the per-command shape of the GitHub Copilot CLI: --norc --noprofile for
+// bash, -NonInteractive for pwsh (seen in user reports for 1.0.60 to 1.0.80). The Sigma
+// rule leaves out a copilot.exe parent under \WindowsApps\ (the consumer Microsoft
+// Copilot app); a grandparent has no folder in Defender, so the shape condition stands
+// in for that filter. That the consumer app never starts a pwsh with -NonInteractive is
+// inferred: no process tree of its shells is known, and if it did, that shell's children
+// would be labelled copilot-cli. A shell the CLI reuses across commands (its shellId
+// path, shape not known) has neither and is not seen.
+// Source claude-code: the shell's command line holds shell-snapshots/snapshot- or
+// shell-snapshots\snapshot- (a local observation of Claude Code 2.1.310 on Linux, not a
+// documented interface), or the shell's parent is claude.exe. On macOS and Linux the
+// native binary is named after its version (seen on Linux; inferred for macOS from the
+// documented versions/ folder), so it cannot be a bare-name key, and the wrapper does
+// that work. Claude Desktop on Windows may share the claude.exe name (inferred, not
+// confirmed); the children of the shells it starts for MCP servers would then be
+// labelled claude-code too. With Claude Code's Linux sandbox (bubblewrap) on, the
+// sandbox's own processes sit between the agent and the inner shell, and their command
+// lines carry the wrapper too, so they are kept as claude-code rows: the bwrap row (see
+// the False positive below), and the outer zsh and apply-seccomp rows, which carry the
+// command text, so one credential read can return on several rows (seen in a local
+// strace capture of Claude Code 2.1.312 on Linux, not a sensor).
+// Source gemini-cli: on macOS and Linux, the shell's command line holds Gemini CLI's
+// shopt -u promptvars nullglob extglob nocaseglob dotglob prefix (read in its source).
+// Source kilo-code: the shell's command line holds Kilo Code's PowerShell UTF-8 prologue,
+// or the shell's parent is kilo or kilo.exe. The Sigma rule also needs a bin folder,
+// which a bare name cannot show.
+// Source windsurf-cascade: the shell's command line holds WINDSURF_STATE_MISSING=0, the
+// legacy Cascade dedicated terminal on macOS and Linux, from Windsurf 1.13.3 until
+// Cascade's removal in Devin Desktop 3.9.19 (read in shipped code).
+// Source codex and amazon-q: the shell's parent is codex or codex.exe, or qchat or
+// qchat.exe. A sandboxed run can put a hop such as bwrap, sandbox-exec or
+// codex-linux-sandbox between the agent and the shell, and then the shell's parent is
+// that hop and the row is not seen.
+// Source vscode-terminal: the children of a terminal shell whose parent is the editor
+// (Editors, matched on the bare name, because Defender gives a child's grandparent as a
+// file name only) and whose own command line loads VS Code's shell-integration script
+// (ShellIntegrationMarkers, matched as whole terms: shellIntegration.ps1 for PowerShell,
+// shellIntegration-bash.sh after --init-file for bash).
+// Not here: shells a VS Code extension starts straight from the extension host (Roo
+// Code's default mode): that shell's parent is Code.exe with --inspect-port=0 on Code's
+// command line, which Defender does not give for a grandparent, and the Sigma rule covers
+// it. Devin Desktop's agent and the Devin CLI, whose shell launch is inferred, not
+// confirmed, as in the Sigma rule.
+// Then one of two branches, named in the Branch column.
 // Credential: a child whose command line contains a CredentialMarkers string, or /proc/
 // together with /environ followed by a space, a quote, ;, ) or the end of the line.
 // These are the strings of the pack's Sigma rule ai-agent-shell-risky-command, matched
@@ -827,7 +900,16 @@ level: high
 // string, then a different child whose process name is in Interpreters, starting 0 to
 // PairWindow (60 seconds) later. It does not check that the interpreter runs what was
 // downloaded, and one interpreter after several downloads in the window gives one row
-// per download.
+// per download. dash is in Interpreters because /bin/sh is dash on Debian and Ubuntu,
+// and whether Defender then records sh or dash as the FileName is not known (inferred).
+// Per-command shells: the Copilot CLI, Claude Code, Codex and Cursor start a new shell
+// for each command, so a download and a later separate command do not pair; a download
+// and an interpreter that one command starts, such as curl -o x.sh ... && sh x.sh under
+// bash, are children of one shell and can pair. Under zsh, or after ; under bash, the
+// last program can replace the shell instead (see the Limitation below) and then does
+// not pair. Under a Cursor wrapper a plain curl ... | sh splits into sibling children,
+// curl then sh, which the Sigma rule cannot match; here they are children of one wrapper
+// shell and pair, when curl is recorded first.
 // Coverage of the editor source: Editors holds Code.exe, so as shipped this covers VS
 // Code on Windows with PowerShell terminals (pwsh and Windows PowerShell). A cmd.exe
 // terminal gets no shell-integration injection and is not seen. Git Bash's bash.exe
@@ -854,8 +936,7 @@ level: high
 // Code source), so a download and a later interpreter in that shell pair. On Linux VS
 // Code asks the runtime for a one-shot spawn backend; if the runtime honours it (not
 // confirmed), each command is its own shell, so a download and a later separate command
-// do not pair; a download and an interpreter that one command starts, such as
-// bash -c "curl ... | sh", are children of one shell and can still pair. It stays a hunt: the UI may be able to write into the runtime's
+// do not pair. It stays a hunt: the UI may be able to write into the runtime's
 // terminals (inferred: the runtime mirrors them to VS Code, and the shipped SDK has
 // write_bash and write_powershell tools), any Copilot SDK host gives the same
 // copilot-runtime parent, and chat.agentHost.copilot.runtimePath can rename the runtime
@@ -864,36 +945,95 @@ level: high
 // work.
 // Limitation: PowerShell cmdlets such as Invoke-WebRequest (iwr), Invoke-Expression
 // (iex) and Get-Content run inside the shell and start no process (an inference in the
-// research, not a capture), so neither branch sees them. PowerShell records a native
-// program's command line as its quoted full path, so gh auth token typed there is
-// matched as gh.exe" auth token. Git Bash quotes the path only when it holds a space, so
-// gh on a path without one is matched as gh.exe auth token. Both forms are inferred, not
-// captured. A download and an interpreter inside one child, such as
-// bash -c "curl ... | sh", are one child and do not pair. In a pipe such as curl ... | sh both children start together and either can
-// be recorded first; it pairs only when the download tool is recorded first or at the
-// same moment.
+// research, not a capture), so neither branch sees them. The same holds for any command
+// an agent puts on its shell's own command line and that starts no program: the Sigma
+// rule reads that line, this query does not. A shell may replace itself with the last
+// program of its -c string instead of starting a child. In local tests (GNU bash
+// 5.2.21, zsh and dash on Linux; not captured), bash did this for a lone command and for
+// the last command after ;, but not after &&; zsh did it after ; and after && as well;
+// dash did neither; and a command run through eval stayed a child. So under the
+// copilot-cli (bash), codex, amazon-q and kilo-code (macOS and Linux) sources, whose
+// shells run the command without eval, a single command such as cat
+// ~/.aws/credentials, or the last command of a list, can replace the shell, so the
+// program's parent is the agent and no source matches it. How Defender records a program
+// after such an exec is not known (inferred). A pipeline is not affected: bash and zsh
+// started every part of curl ... | sh as a child. The Claude Code, Cursor and Windsurf
+// wrappers run the command through eval with more commands after it, and Gemini CLI's
+// runs it in a ( trap ... EXIT ... ) subshell with more commands after it (read in its
+// source), so they are not affected: in a local test with that wrapper (GNU bash
+// 5.2.21) a lone command stayed a child of a forked subshell whose command line still
+// carries the shopt prefix. Whether Defender gives that forked, not exec'd, subshell as
+// the InitiatingProcess is not known (inferred). PowerShell records a native program's command line as its quoted full path,
+// so gh auth token typed there is matched as gh.exe" auth token. Git Bash quotes the path
+// only when it holds a space, so gh on a path without one is matched as gh.exe auth
+// token. Both forms are inferred, not captured. A download and an interpreter inside one
+// child, such as bash -c "curl ... | sh", are one child and do not pair. In a pipe such
+// as curl ... | sh both children start together and either can be recorded first; it
+// pairs only when the download tool is recorded first or at the same moment.
 // Tuning: widen PairWindow for slow downloads or narrow it to cut pairs, and add the
-// interpreter names your fleet records (a versioned python3.12, or dash for sh) to
+// interpreter names your fleet records (a versioned python3.12, for example) to
 // Interpreters. Add the file name that chat.agentHost.copilot.runtimePath points at to
-// RuntimeNames. Allowlist an exact command per repository or device group rather than
-// dropping a branch.
+// RuntimeNames. Filter on Source to hunt one agent at a time. Allowlist an exact command
+// per repository or device group rather than dropping a branch. To cut the pairs where an
+// interpreter only parses a download, drop interpreter children whose ProcessCommandLine
+// runs a module or inline code (-m json.tool, -c, -e), and keep those with no argument,
+// - or -s, which read a script from stdin. To keep only the children of shells, add
+// InitiatingProcessFileName in~ (bash, sh, dash, zsh, pwsh, powershell, cmd and their
+// .exe forms) after the Source line; it drops a shell your sensor records under another
+// name, such as fish under Kilo's $SHELL. To drop the bwrap rows of Claude Code's Linux
+// sandbox, drop a row whose ProcessCommandLine starts with bwrap --new-session
+// --die-with-parent and contains --setenv SANDBOX_RUNTIME 1, the shape the Sigma rule
+// filters. Keep Lookback at 1d to 7d: the source table is materialized, and Microsoft's
+// materialize() docs give its cache a 5 GB limit per cluster node, shared by all
+// queries, past which the query aborts.
 // False positive: a download followed by an unrelated interpreter run in the same
 //   terminal shell within PairWindow, such as curl fetching a file and then python -m
 //   pytest
+// False positive: a download piped into an interpreter that only parses its output,
+//   such as curl ... | python3 -m json.tool, python -c or node -e reading an API
+//   response; the Sigma rule leaves a pipe into python out for this reason, but here
+//   the two halves are sibling children of one shell and pair
 // False positive: a child that only names a download tool, such as a git commit message
 //   that mentions curl, because DownloadTools is matched as a substring
 // False positive: a command that names a credential file without reading it, such as
 //   ssh-keygen writing a new key under .ssh or grep searching for .npmrc
+// False positive: a command that uses or prints an SSH key under .ssh, such as ssh -i
+//   with a key file, or reading a .pub public key, which .ssh/id_ also matches
+// False positive: reading a project's own .npmrc file, which has the same name as the
+//   user's
+// False positive: kubectl or another tool given ~/.kube/config as --kubeconfig, which
+//   agents doing infrastructure work run routinely
 // False positive: once per session on macOS and Linux, the runtime's login-shell
 //   environment probe runs the user's profile under copilot-runtime (inferred from the
 //   Copilot CLI's shipped code); its children appear in this source, and a profile that
 //   runs curl and then node within PairWindow pairs
+// False positive: a program the user's own shell start-up files run under the one-off
+//   login shell Cursor starts to snapshot the shell state, whose command line carries
+//   dump_bash_state, such as ssh-add loading a key under .ssh
+// False positive: an agent asked to install a tool with its vendor's curl | sh
+//   installer, whose curl and sh are children of one agent shell and pair
+// False positive: a token handed to another command through the agent's shell, such as
+//   GH_TOKEN=$(gh auth token) gh ... for a multi-account gh user, or a hook, status-line
+//   or MCP server command from the agent's own configuration that names a listed
+//   string; these repeat on every run, so allowlist the exact command
+// False positive: under Claude Code's Linux sandbox, the bwrap row of each command,
+//   whose command line lists the paths the sandbox masks, which follow its deny-read
+//   settings; in the capture that list named .git-credentials, so the row was returned
+//   for any command, even uname -s (seen in a local strace capture of Claude Code
+//   2.1.312 on Linux, not a sensor)
 let Lookback = 1d;
 let PairWindow = 60s;
 // Bare names: InitiatingProcessParentFileName holds no path
 let Editors = dynamic(["Code.exe"]);
 let RuntimeNames = dynamic(["copilot-runtime.exe", "copilot-runtime"]);
 let ShellIntegrationMarkers = dynamic(["shellIntegration.ps1", "shellIntegration-bash.sh"]);
+let CopilotCliNames = dynamic(["copilot", "copilot.exe"]);
+let CursorHosts = dynamic(["node.exe", "Cursor.exe"]);
+// Wrapper strings of ai-agent-shell-risky-command, matched with contains
+let CursorEvalHead = 'builtin eval -- "$snap"';
+let CursorZshHead = "builtin unalias -m '*' 2>/dev/null || true";
+let GeminiPrefix = "shopt -u promptvars nullglob extglob nocaseglob dotglob";
+let KiloPrologue = "[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false);";
 // The credential and download strings of ai-agent-shell-risky-command, plus
 // gh.exe" auth token and gh.exe auth token: the forms inferred for gh started from
 // PowerShell and from Git Bash on a path with no space (neither captured)
@@ -906,22 +1046,46 @@ let CredentialMarkers = dynamic([".aws/credentials", @".aws\credentials", ".ssh/
 let ProcEnvironEnd = @"(?i)/environ([ '"";)]|$)";
 let DownloadTools = dynamic(["curl", "wget", "Invoke-WebRequest", "iwr",
     "Invoke-RestMethod", " irm ", "(irm ", '"irm ', "'irm ", "DownloadString"]);
-// py and py.exe are the Windows Python launcher
-let Interpreters = dynamic(["sh", "sh.exe", "bash", "bash.exe", "python", "python.exe",
-    "python3", "python3.exe", "py", "py.exe", "node", "node.exe", "pwsh", "pwsh.exe",
-    "powershell", "powershell.exe"]);
-// Copilot harness shells: no shell-integration condition
-let CopilotRuntimeChildren = DeviceProcessEvents
+// py and py.exe are the Windows Python launcher; zsh is the macOS default shell; dash
+// is /bin/sh on Debian and Ubuntu
+let Interpreters = dynamic(["sh", "sh.exe", "dash", "bash", "bash.exe", "zsh", "python",
+    "python.exe", "python3", "python3.exe", "py", "py.exe", "node", "node.exe", "pwsh",
+    "pwsh.exe", "powershell", "powershell.exe"]);
+// One Source per row: the first case that matches. Only the columns the branches and
+// the output use are kept, because the table is materialized
+let AgentShellChildren = materialize(DeviceProcessEvents
     | where Timestamp > ago(Lookback)
-    | where InitiatingProcessParentFileName in~ (RuntimeNames)
-    | extend Source = "copilot-harness";
-let TerminalChildren = DeviceProcessEvents
-    | where Timestamp > ago(Lookback)
-    | where InitiatingProcessParentFileName in~ (Editors)
-    | where InitiatingProcessCommandLine has_any (ShellIntegrationMarkers)
-    | extend Source = "vscode-terminal"
-    | union CopilotRuntimeChildren;
-let CredentialReads = TerminalChildren
+    | extend Source = case(
+        InitiatingProcessCommandLine contains "dump_bash_state"
+            or InitiatingProcessCommandLine contains CursorEvalHead
+            or InitiatingProcessCommandLine contains CursorZshHead
+            or InitiatingProcessCommandLine contains "CURSOR_STATE_INPUT_FILE", "cursor",
+        InitiatingProcessParentFileName in~ (CursorHosts)
+            and InitiatingProcessCommandLine contains @"\ps-script-"
+            and InitiatingProcessCommandLine contains ".ps1", "cursor",
+        InitiatingProcessParentFileName in~ (RuntimeNames), "copilot-harness",
+        InitiatingProcessCommandLine contains "__copilotCommandFinished", "copilot-cli",
+        InitiatingProcessParentFileName in~ (CopilotCliNames)
+            and (InitiatingProcessCommandLine contains "--norc --noprofile"
+                or InitiatingProcessCommandLine contains "-NonInteractive"), "copilot-cli",
+        InitiatingProcessCommandLine contains "shell-snapshots/snapshot-"
+            or InitiatingProcessCommandLine contains @"shell-snapshots\snapshot-"
+            or InitiatingProcessParentFileName =~ "claude.exe", "claude-code",
+        InitiatingProcessCommandLine contains GeminiPrefix, "gemini-cli",
+        InitiatingProcessCommandLine contains KiloPrologue
+            or InitiatingProcessParentFileName in~ ("kilo", "kilo.exe"), "kilo-code",
+        InitiatingProcessCommandLine contains "WINDSURF_STATE_MISSING=0", "windsurf-cascade",
+        InitiatingProcessParentFileName in~ ("codex", "codex.exe"), "codex",
+        InitiatingProcessParentFileName in~ ("qchat", "qchat.exe"), "amazon-q",
+        InitiatingProcessParentFileName in~ (Editors)
+            and InitiatingProcessCommandLine has_any (ShellIntegrationMarkers), "vscode-terminal",
+        "")
+    | where isnotempty(Source)
+    | project Timestamp, DeviceId, DeviceName, AccountName, ReportId, Source,
+              InitiatingProcessParentFileName, InitiatingProcessFileName,
+              InitiatingProcessId, InitiatingProcessCreationTime,
+              InitiatingProcessCommandLine, FileName, ProcessId, ProcessCommandLine);
+let CredentialReads = AgentShellChildren
     | mv-apply Marker = CredentialMarkers to typeof(string) on (
         where ProcessCommandLine contains Marker
         | summarize CredentialHits = make_list(Marker))
@@ -929,7 +1093,7 @@ let CredentialReads = TerminalChildren
         or (ProcessCommandLine contains "/proc/"
             and ProcessCommandLine matches regex ProcEnvironEnd)
     | extend Branch = "credential";
-let Downloads = TerminalChildren
+let Downloads = AgentShellChildren
     | mv-apply Tool = DownloadTools to typeof(string) on (
         where ProcessCommandLine contains Tool
         | summarize DownloadHits = make_list(Tool))
@@ -939,16 +1103,20 @@ let Downloads = TerminalChildren
               DownloadCommandLine = ProcessCommandLine;
 // The few download children on the left, the many interpreter children on the right
 let Pairs = Downloads
-    | join kind=inner (TerminalChildren | where FileName in~ (Interpreters))
+    | join kind=inner (AgentShellChildren | where FileName in~ (Interpreters))
         on DeviceId, InitiatingProcessId, InitiatingProcessCreationTime
     // A different child, starting 0 to PairWindow after the download
     | where not(ProcessId == DownloadProcessId and Timestamp == DownloadTime)
     | where Timestamp between (DownloadTime .. DownloadTime + PairWindow)
     | extend Branch = "pairing";
+// DeviceId and ReportId let an analyst take action on a row; the shell's full command
+// line comes last, because for cursor rows it is wrapper text only
 union CredentialReads, Pairs
-| project Timestamp, Branch, Source, DeviceName, AccountName, InitiatingProcessParentFileName,
-          InitiatingProcessCommandLine, FileName, ProcessCommandLine, CredentialHits,
-          DownloadTime, DownloadCommandLine
+| project Timestamp, Branch, Source, DeviceName, AccountName, DeviceId, ReportId,
+          InitiatingProcessParentFileName, InitiatingProcessFileName, InitiatingProcessId,
+          InitiatingProcessCreationTime, FileName, ProcessId, ProcessCommandLine,
+          CredentialHits, DownloadTime, DownloadProcessId, DownloadCommandLine,
+          InitiatingProcessCommandLine
 | sort by Timestamp desc
 ```
 
@@ -957,7 +1125,7 @@ union CredentialReads, Pairs
 - **Rule 1 (capability profile).** Only as good as the profile. Keep profiles tight and per-task, not per-product: a triage bot that can read tickets does not need a send-email tool "just in case." If a profile needs widening often, that is a design smell worth a second look, not a reason to loosen the rule.
 - **Rule 2 (trifecta).** The benign trip is a legitimate agent that reads external content and then genuinely must act on it (a monitoring bot that reads a status page and posts to a channel). Allowlist the destination and the specific tool pairing per task, not globally, so the general pattern stays armed.
 - **Rule 3 (autonomy).** Run it report-only for a couple of weeks like any SIEM correlation rule, find your noisy legitimate automations (batch jobs, scheduled summarizers), allowlist them, and set thresholds above your noisiest honest task. The thresholds `N`, `K`, and `R` are dials, not gospel.
-- **Endpoint rules (section 4).** The headless rule fires on CI runners and sandboxes that run agents with approvals off by design: scope it by host group rather than dropping a flag. The shell rule fires on vendor `curl | sh` installers the developer asked for, and on an agent's own hook, status-line or MCP server command that calls `gh auth token` on every run: allowlist the exact command per repository or host group. With Claude Code's Linux sandbox (bubblewrap) on, each command adds two wrapper rows that list the paths the sandbox masks, so when its deny-read settings name a listed credential path such as `~/.git-credentials` they match every command; the shell rule drops them (they start with `bwrap --new-session --die-with-parent` and set `SANDBOX_RUNTIME 1`) and still matches the command on the inner shell row. The macOS sandbox wrapper, `sandbox-exec`, is not captured, so check for similar rows there before alerting. The terminal hunt pairs any download with any interpreter in the window, such as `curl` then `python -m pytest`.
+- **Endpoint rules (section 4).** The headless rule fires on CI runners and sandboxes that run agents with approvals off by design: scope it by host group rather than dropping a flag. The shell rule fires on vendor `curl | sh` installers the developer asked for, and on an agent's own hook, status-line or MCP server command that calls `gh auth token` on every run: allowlist the exact command per repository or host group. With Claude Code's Linux sandbox (bubblewrap) on, each command adds two wrapper rows that list the paths the sandbox masks, so when its deny-read settings name a listed credential path such as `~/.git-credentials` they match every command; the shell rule drops them (they start with `bwrap --new-session --die-with-parent` and set `SANDBOX_RUNTIME 1`) and still matches the command on the inner shell row. The macOS sandbox wrapper, `sandbox-exec`, is not captured, so check for similar rows there before alerting. The agent shells hunt pairs any download with any interpreter in the window, such as `curl` then `python -m pytest`, and a download piped into a parser, such as `curl ... | python3 -m json.tool`, which the shell rule leaves out. It keeps the children of an MCP server or hook that an agent starts directly under that agent's source, and it returns the Claude Code sandbox's `bwrap` row for every command; its header gives the shell rule's filter as a tuning line rather than building it in.
 
 ## Threat hunt
 
@@ -989,7 +1157,7 @@ Architecture is the real control, more so than with most threats because the age
 - **You still cannot fix prompt injection.** Everything here assumes the agent will be steered successfully eventually; it limits what that costs. Treat any product claiming to "secure" agents by detecting injection as a probabilistic filter, not a boundary.
 - **Human approval fatigues.** Gate too many actions and approvers rubber-stamp; gate too few and you have gated nothing. Reserve the human for genuinely consequential, hard-to-reverse actions and make the approval UI show ground truth.
 - **This telemetry is young.** Windows eventing has decades of field testing; agent tool-call logging has a year or two and no standard schema, so field names and even the events you can get vary by stack. Expect to instrument your own apps.
-- **The endpoint rules see command lines, not intent.** They catch a credential read only when the file or token command is named on the command line, they do not cover every agent (Cursor and the Copilot CLI rest on shipped code and user reports, not a capture; Devin Local and Devin CLI shells and Cursor's default Windows PowerShell executor are not covered), and the terminal hunt's editor source is Windows-only as shipped. None has been run against a sensor capture yet; the writeup lists the full set of gaps.
+- **The endpoint rules see command lines, not intent.** They catch a credential read only when the file or token command is named on the command line, they do not cover every agent (Cursor and the Copilot CLI rest on shipped code and user reports, not a capture; Devin Local and Devin CLI shells are not covered, and Cursor's default Windows PowerShell executor only through the native programs its script starts, in the hunt), and the hunt's editor source is Windows-only as shipped. Most agents start a shell per command, so the hunt pairs a download and an interpreter only inside one command, and a program that replaces its shell (a lone command under the Copilot CLI's or Codex's shell) is not seen by the hunt; Gemini CLI runs each command in a subshell with more commands after it, so its commands stay children of a shell that carries its prefix (tested locally). None has been run against a sensor capture yet; the writeup lists the full set of gaps.
 - **Multi-agent multiplies everything.** Once agents call other agents, trust, identity, and loop-control problems compound in ways a single-agent model does not capture. If you build multi-agent systems, treat the above as the floor, not the ceiling.
 
 ## ATT&CK and references
